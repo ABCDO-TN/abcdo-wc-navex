@@ -21,14 +21,14 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 spinner.removeClass('is-active');
-                button.prop('disabled', false);
 
                 if (response.success) {
-                    alert(response.data.message);
-                    // Recharger la page pour voir le nouveau statut
-                    location.reload();
+                    // Remplacer le bouton par un message de succès
+                    button.siblings('p').html('<strong>Statut Navex :</strong> Envoyé');
+                    button.remove();
                 } else {
                     alert('Erreur : ' + response.data.message);
+                    button.prop('disabled', false); // Réactiver le bouton seulement en cas d'erreur
                 }
             },
             error: function(xhr, status, error) {

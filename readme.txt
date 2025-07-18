@@ -3,7 +3,7 @@ Contributors: ABCDO
 Tags: woocommerce, shipping, delivery, navex, integration
 Requires at least: 5.0
 Tested up to: 6.5
-Stable tag: 1.0.13
+Stable tag: 2.0.0
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,12 @@ Ce plugin connecte votre boutique WooCommerce au service de livraison tunisien N
 4.  Allez dans `WooCommerce > Réglages > Intégration > ABCDO Navex` et entrez votre clé d'API Navex.
 
 == Changelog ==
+
+= 2.0.0 =
+*   **Refonte Majeure**
+*   Fonctionnalité : La page de configuration est maintenant indépendante et se trouve dans un nouveau menu "Navex Delivery" avec une icône dédiée.
+*   Correction : Le problème d'envoi de commandes en double a été résolu.
+*   Correction : L'interprétation de la réponse de l'API Navex a été corrigée pour afficher les messages de succès de manière fiable.
 
 = 1.0.13 =
 *   Amélioration : La vérification des mises à jour est maintenant forcée lors de la visite de la page des mises à jour de WordPress.

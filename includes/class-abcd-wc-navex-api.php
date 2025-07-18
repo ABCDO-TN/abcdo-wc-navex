@@ -32,8 +32,7 @@ class ABCD_WC_Navex_API {
      * Constructeur.
      */
     public function __construct() {
-        $options = get_option( 'woocommerce_abcdo-wc-navex_settings' );
-        $this->api_token = isset( $options['api_token'] ) ? $options['api_token'] : '';
+        $this->api_token = get_option( 'abcdo_wc_navex_api_token' );
     }
 
     /**

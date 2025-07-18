@@ -18,17 +18,70 @@ class ABCD_WC_Navex_Admin {
      * Constructeur.
      */
     public function __construct() {
-        // Ajouter le meta box sur la page de commande
+        // Meta box sur la page de commande
         add_action( 'add_meta_boxes', array( $this, 'add_navex_meta_box' ) );
 
-        // Gérer l'action d'envoi manuel
+        // Action AJAX pour l'envoi manuel
         add_action( 'wp_ajax_abcd_wc_navex_send_parcel', array( $this, 'ajax_send_parcel' ) );
 
-        // Charger les scripts
+        // Scripts
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
-        // Charger les traductions au bon moment
+        // Traductions
         add_action( 'init', array( $this, 'load_textdomain' ) );
+
+        // Page de configuration indépendante
+        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+    }
+
+    /**
+     * Ajouter le menu au tableau de bord.
+     */
+    public function add_admin_menu() {
+        add_menu_page(
+            __( 'Navex Delivery', 'abcdo-wc-navex' ),
+            __( 'Navex Delivery', 'abcdo-wc-navex' ),
+            'manage_options',
+            'abcdo-wc-navex',
+            array( $this, 'render_settings_page' ),
+            'dashicons-truck',
+            56
+        );
+    }
+
+    /**
+     * Enregistrer les réglages.
+     */
+    public function register_settings() {
+        register_setting( 'abcdo_wc_navex_options', 'abcdo_wc_navex_api_token' );
+    }
+
+    /**
+     * Afficher la page de réglages.
+     */
+    public function render_settings_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+            <form action="options.php" method="post">
+                <?php
+                settings_fields( 'abcdo_wc_navex_options' );
+                do_settings_sections( 'abcdo-wc-navex' );
+                ?>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row"><?php _e( 'Token d\'API Navex', 'abcdo-wc-navex' ); ?></th>
+                        <td>
+                            <input type="text" name="abcdo_wc_navex_api_token" value="<?php echo esc_attr( get_option('abcdo_wc_navex_api_token') ); ?>" size="50" />
+                            <p class="description"><?php _e( 'Entrez votre token d\'authentification fourni par Navex.', 'abcdo-wc-navex' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+        </div>
+        <?php
     }
 
     /**
@@ -162,11 +215,11 @@ class ABCD_WC_Navex_Admin {
             wp_send_json_error( array( 'message' => $response->get_error_message() ) );
         }
 
-        // Vérifier la réponse de l'API
-        if ( isset( $response['status'] ) && $response['status_message'] === 'Product Added.' ) {
+        // Vérifier la réponse de l'API (condition de succès élargie)
+        if ( ( isset( $response['status'] ) && $response['status_message'] === 'Product Added.' ) || ( isset( $response['status'] ) && is_numeric( $response['status'] ) ) ) {
             // Mettre à jour le statut dans les métadonnées de la commande (compatible HPOS)
             $order->update_meta_data( '_navex_shipping_status', 'Envoyé' );
-            $order->add_order_note( 'Colis envoyé à Navex avec succès.' );
+            $order->add_order_note( 'Colis envoyé à Navex avec succès. Réponse de l\'API : ' . json_encode( $response ) );
             $order->save();
             wp_send_json_success( array( 'message' => 'Colis envoyé à Navex avec succès !' ) );
         } else {
