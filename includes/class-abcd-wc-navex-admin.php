@@ -33,7 +33,11 @@ class ABCD_WC_Navex_Admin {
      */
     public function enqueue_scripts() {
         $screen = get_current_screen();
-        $hpos_enabled = class_exists( '\Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::is_hpos_enabled();
+        if ( ! $screen ) {
+            return;
+        }
+
+        $hpos_enabled = class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled();
         
         // Vérifier si nous sommes sur la bonne page de commande (traditionnelle ou HPOS)
         if ( ( $hpos_enabled && $screen->id === wc_get_page_screen_id( 'shop-order' ) ) || ( ! $hpos_enabled && $screen->id === 'shop_order' ) ) {
@@ -52,7 +56,7 @@ class ABCD_WC_Navex_Admin {
      */
     public function add_navex_meta_box() {
         $screen = 'shop_order';
-        if ( class_exists( '\Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::is_hpos_enabled() ) {
+        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled() ) {
             $screen = wc_get_page_screen_id( 'shop-order' );
         }
 
