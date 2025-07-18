@@ -47,7 +47,10 @@ class ABCD_WC_Navex_Admin {
             return;
         }
 
-        $hpos_enabled = class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled();
+        $hpos_enabled = false;
+        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && method_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil', 'custom_order_tables_is_enabled' ) ) {
+            $hpos_enabled = \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled();
+        }
         
         // Vérifier si nous sommes sur la bonne page de commande (traditionnelle ou HPOS)
         if ( ( $hpos_enabled && $screen->id === wc_get_page_screen_id( 'shop-order' ) ) || ( ! $hpos_enabled && $screen->id === 'shop_order' ) ) {
@@ -66,8 +69,10 @@ class ABCD_WC_Navex_Admin {
      */
     public function add_navex_meta_box() {
         $screen = 'shop_order';
-        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled() ) {
-            $screen = wc_get_page_screen_id( 'shop-order' );
+        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && method_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil', 'custom_order_tables_is_enabled' ) ) {
+            if ( \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled() ) {
+                $screen = wc_get_page_screen_id( 'shop-order' );
+            }
         }
 
         add_meta_box(
