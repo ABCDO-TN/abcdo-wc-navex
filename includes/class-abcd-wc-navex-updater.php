@@ -40,7 +40,7 @@ class ABCD_WC_Navex_Updater {
     public function init() {
         add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'modify_transient' ), 10, 1 );
         add_filter( 'plugins_api', array( $this, 'plugin_popup' ), 10, 3 );
-        add_filter( 'upgrader_post_install', array( $this, 'after_install' ), 10, 3 );
+        add_filter( 'upgrader_source_selection', array( $this, 'upgrader_source_selection' ), 10, 4 );
     }
 
     private function get_repository_info() {
@@ -105,15 +105,14 @@ class ABCD_WC_Navex_Updater {
         return $result;
     }
 
-    public function after_install( $response, $hook_extra, $result ) {
-        global $wp_filesystem;
-        $install_directory = plugin_dir_path( $this->file );
-        $wp_filesystem->move( $result['destination'], $install_directory );
-        $result['destination'] = $install_directory;
-
-        // Activer le plugin
-        activate_plugin( $this->basename );
-
-        return $result;
+    public function upgrader_source_selection( $source, $remote_source, $upgrader, $hook_extra = null ) {
+        // Vérifier si la mise à jour concerne ce plugin
+        if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === $this->basename ) {
+            $new_source = trailingslashit( $remote_source ) . 'abcdo-wc-navex/';
+            if ( is_dir( $new_source ) ) {
+                return $new_source;
+            }
+        }
+        return $source;
     }
 }
