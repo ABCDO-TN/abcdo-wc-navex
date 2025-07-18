@@ -47,13 +47,11 @@ class ABCD_WC_Navex_Admin {
             return;
         }
 
-        $hpos_enabled = false;
-        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && method_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil', 'custom_order_tables_is_enabled' ) ) {
-            $hpos_enabled = \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled();
-        }
-        
-        // Vérifier si nous sommes sur la bonne page de commande (traditionnelle ou HPOS)
-        if ( ( $hpos_enabled && $screen->id === wc_get_page_screen_id( 'shop-order' ) ) || ( ! $hpos_enabled && $screen->id === 'shop_order' ) ) {
+        // ID de l'écran HPOS et de l'écran classique
+        $hpos_screen_id = wc_get_page_screen_id( 'shop-order' );
+        $classic_screen_id = 'shop_order';
+
+        if ( $screen->id === $classic_screen_id || $screen->id === $hpos_screen_id ) {
             wp_enqueue_script(
                 'abcd-wc-navex-admin-js',
                 ABCDO_WC_NAVEX_URL . 'assets/js/admin.js',
@@ -68,21 +66,19 @@ class ABCD_WC_Navex_Admin {
      * Ajouter le meta box sur la page de commande (compatible HPOS).
      */
     public function add_navex_meta_box() {
-        $screen = 'shop_order';
-        if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) && method_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil', 'custom_order_tables_is_enabled' ) ) {
-            if ( \Automattic\WooCommerce\Utilities\FeaturesUtil::custom_order_tables_is_enabled() ) {
-                $screen = wc_get_page_screen_id( 'shop-order' );
-            }
-        }
+        // Enregistrer la meta box pour l'écran classique et l'écran HPOS.
+        $screens = array_unique( array( 'shop_order', wc_get_page_screen_id( 'shop-order' ) ) );
 
-        add_meta_box(
-            'abcd-wc-navex-meta-box',
-            __( 'ABCDO Navex Shipping', 'abcdo-wc-navex' ),
-            array( $this, 'render_meta_box_content' ),
-            $screen,
-            'side',
-            'core'
-        );
+        foreach ( $screens as $screen ) {
+            add_meta_box(
+                'abcd-wc-navex-meta-box',
+                __( 'ABCDO Navex Shipping', 'abcdo-wc-navex' ),
+                array( $this, 'render_meta_box_content' ),
+                $screen,
+                'side',
+                'default'
+            );
+        }
     }
 
     /**
