@@ -1,0 +1,23 @@
+# Fichiers de dépendances et de build
+/vendor/
+/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Fichiers de configuration des éditeurs et IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de log et de cache
+*.log
+.cache/
+
+# Fichiers de build WordPress
+/build/
+*.zip
