@@ -3,7 +3,7 @@
  * Plugin Name:       ABCDO Navex Integration for WooCommerce
  * Plugin URI:        https://github.com/abcd-wc-navex/abcdo-wc-navex
  * Description:       Intègre l'API de livraison Navex avec WooCommerce pour automatiser la création de colis.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            ABCDO
  * Author URI:        https://github.com/abcd-wc-navex
  * License:           GPL-2.0+
