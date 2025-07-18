@@ -29,20 +29,22 @@ class ABCD_WC_Navex_Admin {
     }
 
     /**
-     * Charger les scripts et styles pour l'admin.
+     * Charger les scripts et styles pour l'admin (compatible HPOS).
      */
-    public function enqueue_scripts( $hook ) {
-        // Ne charger le script que sur la page d'édition de commande
-        if ( 'post.php' !== $hook || 'shop_order' !== get_post_type() ) {
-            return;
+    public function enqueue_scripts() {
+        $screen = get_current_screen();
+        $hpos_enabled = class_exists( '\Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::is_hpos_enabled();
+        
+        // Vérifier si nous sommes sur la bonne page de commande (traditionnelle ou HPOS)
+        if ( ( $hpos_enabled && $screen->id === wc_get_page_screen_id( 'shop-order' ) ) || ( ! $hpos_enabled && $screen->id === 'shop_order' ) ) {
+            wp_enqueue_script(
+                'abcd-wc-navex-admin-js',
+                ABCDO_WC_NAVEX_URL . 'assets/js/admin.js',
+                array( 'jquery' ),
+                ABCDO_WC_NAVEX_VERSION,
+                true
+            );
         }
-        wp_enqueue_script(
-            'abcd-wc-navex-admin-js',
-            ABCDO_WC_NAVEX_URL . 'assets/js/admin.js',
-            array( 'jquery' ),
-            ABCDO_WC_NAVEX_VERSION,
-            true
-        );
     }
 
     /**

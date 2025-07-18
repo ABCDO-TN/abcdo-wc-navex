@@ -15,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ABCD_WC_Navex_Integration extends WC_Integration {
 
     /**
+     * Le token d'API.
+     *
+     * @var string
+     */
+    public $api_token;
+
+    /**
      * Constructeur.
      */
     public function __construct() {
