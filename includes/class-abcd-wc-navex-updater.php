@@ -63,6 +63,11 @@ class ABCD_WC_Navex_Updater {
     }
 
     public function modify_transient( $transient ) {
+        // Exit if transient is not an object.
+        if ( ! is_object( $transient ) ) {
+            return $transient;
+        }
+        
         if ( property_exists( $transient, 'checked' ) ) {
             if ( $checked = $transient->checked ) {
                 $this->get_repository_info();
