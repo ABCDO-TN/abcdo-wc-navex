@@ -26,6 +26,16 @@ class ABCD_WC_Navex_Admin {
 
         // Charger les scripts
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
+        // Charger les traductions au bon moment
+        add_action( 'init', array( $this, 'load_textdomain' ) );
+    }
+
+    /**
+     * Charge les traductions du plugin.
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain( 'abcdo-wc-navex', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
     }
 
     /**
