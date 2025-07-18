@@ -46,30 +46,41 @@ class ABCD_WC_Navex_Admin {
     }
 
     /**
-     * Ajouter le meta box sur la page de commande.
+     * Ajouter le meta box sur la page de commande (compatible HPOS).
      */
     public function add_navex_meta_box() {
+        $screen = 'shop_order';
+        if ( class_exists( '\Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::is_hpos_enabled() ) {
+            $screen = wc_get_page_screen_id( 'shop-order' );
+        }
+
         add_meta_box(
             'abcd-wc-navex-meta-box',
             __( 'ABCDO Navex Shipping', 'abcdo-wc-navex' ),
             array( $this, 'render_meta_box_content' ),
-            'shop_order',
+            $screen,
             'side',
             'core'
         );
     }
 
     /**
-     * Afficher le contenu du meta box.
+     * Afficher le contenu du meta box (compatible HPOS).
      *
-     * @param WP_Post $post L'objet post de la commande.
+     * @param WP_Post|WC_Order $post_or_order_object L'objet post ou commande.
      */
-    public function render_meta_box_content( $post ) {
+    public function render_meta_box_content( $post_or_order_object ) {
+        $order = ( $post_or_order_object instanceof WP_Post ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
+
+        if ( ! $order ) {
+            return;
+        }
+
         // Ajouter un nonce pour la sécurité
         wp_nonce_field( 'abcd_wc_navex_send_parcel_action', 'abcd_wc_navex_nonce' );
 
-        $order_id = $post->ID;
-        $status = get_post_meta( $order_id, '_navex_shipping_status', true );
+        $order_id = $order->get_id();
+        $status = $order->get_meta( '_navex_shipping_status' );
 
         echo '<p>';
         if ( ! empty( $status ) ) {
@@ -79,8 +90,11 @@ class ABCD_WC_Navex_Admin {
         }
         echo '</p>';
 
-        echo '<button type="button" id="abcd-wc-navex-send-btn" class="button button-primary" data-order-id="' . esc_attr( $order_id ) . '">' . esc_html__( 'Envoyer à Navex', 'abcdo-wc-navex' ) . '</button>';
-        echo '<span class="spinner"></span>';
+        // Ne pas afficher le bouton si la commande a déjà été envoyée
+        if ( 'Envoyé' !== $status ) {
+            echo '<button type="button" id="abcd-wc-navex-send-btn" class="button button-primary" data-order-id="' . esc_attr( $order_id ) . '">' . esc_html__( 'Envoyer à Navex', 'abcdo-wc-navex' ) . '</button>';
+            echo '<span class="spinner" style="float: none; margin-top: 4px;"></span>';
+        }
     }
 
     /**
@@ -133,9 +147,10 @@ class ABCD_WC_Navex_Admin {
 
         // Vérifier la réponse de l'API
         if ( isset( $response['status'] ) && $response['status_message'] === 'Product Added.' ) {
-            // Mettre à jour le statut dans les métadonnées de la commande
-            update_post_meta( $order_id, '_navex_shipping_status', 'Envoyé' );
+            // Mettre à jour le statut dans les métadonnées de la commande (compatible HPOS)
+            $order->update_meta_data( '_navex_shipping_status', 'Envoyé' );
             $order->add_order_note( 'Colis envoyé à Navex avec succès.' );
+            $order->save();
             wp_send_json_success( array( 'message' => 'Colis envoyé à Navex avec succès !' ) );
         } else {
             $error_message = isset( $response['status_message'] ) ? $response['status_message'] : 'Erreur inconnue de l\'API Navex.';
