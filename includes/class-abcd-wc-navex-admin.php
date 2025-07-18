@@ -23,6 +23,26 @@ class ABCD_WC_Navex_Admin {
 
         // Gérer l'action d'envoi manuel
         add_action( 'wp_ajax_abcd_wc_navex_send_parcel', array( $this, 'ajax_send_parcel' ) );
+
+        // Charger les scripts
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+    }
+
+    /**
+     * Charger les scripts et styles pour l'admin.
+     */
+    public function enqueue_scripts( $hook ) {
+        // Ne charger le script que sur la page d'édition de commande
+        if ( 'post.php' !== $hook || 'shop_order' !== get_post_type() ) {
+            return;
+        }
+        wp_enqueue_script(
+            'abcd-wc-navex-admin-js',
+            ABCDO_WC_NAVEX_URL . 'assets/js/admin.js',
+            array( 'jquery' ),
+            ABCDO_WC_NAVEX_VERSION,
+            true
+        );
     }
 
     /**
@@ -67,11 +87,60 @@ class ABCD_WC_Navex_Admin {
      * Gérer la requête AJAX pour l'envoi manuel.
      */
     public function ajax_send_parcel() {
-        // Vérifier le nonce
-        check_ajax_referer( 'abcd_wc_navex_send_parcel_action', 'nonce' );
+        // Vérifier le nonce et les permissions
+        if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'abcd_wc_navex_send_parcel_action' ) ) {
+            wp_send_json_error( array( 'message' => 'Échec de la vérification de sécurité.' ) );
+        }
+        if ( ! current_user_can( 'edit_shop_orders' ) ) {
+            wp_send_json_error( array( 'message' => 'Vous n\'avez pas les permissions nécessaires.' ) );
+        }
+        if ( ! isset( $_POST['order_id'] ) ) {
+            wp_send_json_error( array( 'message' => 'ID de commande manquant.' ) );
+        }
 
-        // Logique d'envoi à implémenter
-        
-        wp_send_json_success( array( 'message' => 'Colis envoyé avec succès !' ) );
+        $order_id = intval( $_POST['order_id'] );
+        $order = wc_get_order( $order_id );
+
+        if ( ! $order ) {
+            wp_send_json_error( array( 'message' => 'Commande non trouvée.' ) );
+        }
+
+        // Préparer les données pour l'API Navex
+        $data = array(
+            'prix'        => $order->get_total(),
+            'nom'         => $order->get_formatted_shipping_full_name(),
+            'gouvernerat' => $order->get_shipping_state(),
+            'ville'       => $order->get_shipping_city(),
+            'adresse'     => $order->get_shipping_address_1(),
+            'tel'         => $order->get_billing_phone(),
+            'tel2'        => '',
+            'designation' => 'Commande #' . $order->get_order_number(),
+            'nb_article'  => $order->get_item_count(),
+            'msg'         => $order->get_customer_note(),
+            'echange'     => '',
+            'article'     => '',
+            'nb_echange'  => '',
+            'ouvrir'      => 'Non', // ou 'Oui' selon la configuration
+        );
+
+        // Envoyer les données à l'API
+        $api = new ABCD_WC_Navex_API();
+        $response = $api->send_parcel( $data );
+
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( array( 'message' => $response->get_error_message() ) );
+        }
+
+        // Vérifier la réponse de l'API
+        if ( isset( $response['status'] ) && $response['status_message'] === 'Product Added.' ) {
+            // Mettre à jour le statut dans les métadonnées de la commande
+            update_post_meta( $order_id, '_navex_shipping_status', 'Envoyé' );
+            $order->add_order_note( 'Colis envoyé à Navex avec succès.' );
+            wp_send_json_success( array( 'message' => 'Colis envoyé à Navex avec succès !' ) );
+        } else {
+            $error_message = isset( $response['status_message'] ) ? $response['status_message'] : 'Erreur inconnue de l\'API Navex.';
+            $order->add_order_note( 'Erreur lors de l\'envoi à Navex : ' . $error_message );
+            wp_send_json_error( array( 'message' => $error_message ) );
+        }
     }
 }

@@ -18,15 +18,17 @@ class ABCD_WC_Navex_Updater {
     private $plugin;
     private $basename;
     private $active;
-    private $github_repo = 'abcd-wc-navex/abcdo-wc-navex'; // Format: user/repo
+    private $github_repo;
+    private $github_response;
 
     /**
      * Constructeur.
      */
     public function __construct( $file ) {
         $this->file = $file;
+        $this->github_repo = 'ABCDO-TN/abcdo-wc-navex'; // Format: user/repo
+
         add_action( 'admin_init', array( $this, 'set_plugin_properties' ) );
-        return $this;
     }
 
     public function set_plugin_properties() {
@@ -42,22 +44,76 @@ class ABCD_WC_Navex_Updater {
     }
 
     private function get_repository_info() {
-        // Logique pour récupérer les informations de la dernière release sur GitHub
-        return false;
+        if ( is_null( $this->github_response ) ) {
+            $request_uri = sprintf( 'https://api.github.com/repos/%s/releases/latest', $this->github_repo );
+            $response = wp_remote_get( $request_uri );
+
+            if ( is_wp_error( $response ) ) {
+                return false;
+            }
+
+            $this->github_response = json_decode( wp_remote_retrieve_body( $response ) );
+        }
+        return $this->github_response;
     }
 
     public function modify_transient( $transient ) {
-        // Logique pour modifier le transient des mises à jour
+        if ( property_exists( $transient, 'checked' ) ) {
+            if ( $checked = $transient->checked ) {
+                $this->get_repository_info();
+
+                if ( ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
+                    $obj = new stdClass();
+                    $obj->slug = $this->basename;
+                    $obj->new_version = $this->github_response->tag_name;
+                    $obj->url = $this->plugin['PluginURI'];
+                    
+                    $asset = $this->github_response->assets[0];
+                    if ( ! empty( $asset->browser_download_url ) ) {
+                        $obj->package = $asset->browser_download_url;
+                    }
+
+                    $transient->response[ $this->basename ] = $obj;
+                }
+            }
+        }
         return $transient;
     }
 
     public function plugin_popup( $result, $action, $args ) {
-        // Logique pour afficher les détails de la mise à jour
+        if ( ! empty( $args->slug ) && $args->slug == $this->basename ) {
+            $this->get_repository_info();
+
+            if ( ! empty( $this->github_response ) ) {
+                $obj = new stdClass();
+                $obj->name = $this->plugin['Name'];
+                $obj->slug = $this->basename;
+                $obj->version = $this->github_response->tag_name;
+                $obj->author = $this->plugin['Author'];
+                $obj->homepage = $this->plugin['PluginURI'];
+                $obj->sections = array(
+                    'description' => $this->plugin['Description'],
+                    'changelog' => $this->github_response->body,
+                );
+                $asset = $this->github_response->assets[0];
+                if ( ! empty( $asset->browser_download_url ) ) {
+                    $obj->download_link = $asset->browser_download_url;
+                }
+                return $obj;
+            }
+        }
         return $result;
     }
 
     public function after_install( $response, $hook_extra, $result ) {
-        // Logique après l'installation de la mise à jour
-        return $response;
+        global $wp_filesystem;
+        $install_directory = plugin_dir_path( $this->file );
+        $wp_filesystem->move( $result['destination'], $install_directory );
+        $result['destination'] = $install_directory;
+
+        // Activer le plugin
+        activate_plugin( $this->basename );
+
+        return $result;
     }
 }
