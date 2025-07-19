@@ -1,0 +1,51 @@
+/* Styles pour la modale de détails Navex */
+
+#navex-details-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+}
+
+#navex-details-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+    width: 90%;
+    max-width: 500px;
+}
+
+#navex-details-modal-content h2 {
+    margin-top: 0;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+#navex-modal-body ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#navex-modal-body li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+#navex-modal-body li:last-child {
+    border-bottom: none;
+}
+
+#navex-modal-close {
+    margin-top: 20px;
+}

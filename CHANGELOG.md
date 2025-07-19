@@ -5,6 +5,20 @@ Toutes les modifications notables apportées à ce projet seront documentées da
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.17] - 2025-07-19
+
+### Ajouté
+- **Chiffrement des Tokens :** Les tokens d'API sont maintenant chiffrés en base de données en utilisant les sels de sécurité de WordPress pour une sécurité accrue.
+- **Fonctionnalité "Détails du Colis" :** Le bouton "Détails" dans le tableau de bord ouvre désormais une fenêtre modale affichant les informations complètes du colis récupérées via une nouvelle requête API.
+
+### Corrigé
+- **Synchronisation des Colis :** La liste des colis affichée dans le tableau de bord est maintenant directement liée aux commandes WooCommerce existantes. Les colis dont les commandes ont été supprimées n'apparaissent plus.
+- **Chargement des Traductions :** Le "textdomain" est maintenant chargé sur le hook `init` pour se conformer aux standards WordPress et éliminer les notices PHP.
+
+### Modifié
+- **Logique de l'API :** La classe API a été mise à jour pour gérer le déchiffrement des tokens et inclure une nouvelle méthode pour récupérer les détails d'un colis spécifique.
+- **Logique d'Administration :** La classe Admin gère maintenant la sauvegarde des tokens chiffrés, la nouvelle source de données pour la liste des colis, et l'endpoint AJAX pour la modale de détails.
+
 ## [1.0.16] - 2025-07-19
 
 ### Corrigé
