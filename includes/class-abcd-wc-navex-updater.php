@@ -28,10 +28,14 @@ class ABCD_WC_Navex_Updater {
         $this->file = $file;
         $this->github_repo = 'ABCDO-TN/abcdo-wc-navex'; // Format: user/repo
 
-        add_action( 'admin_init', array( $this, 'set_plugin_properties' ) );
+        // Charger les propriétés immédiatement pour éviter les race conditions.
+        $this->set_plugin_properties();
     }
 
     public function set_plugin_properties() {
+        if ( ! function_exists( 'get_plugin_data' ) ) {
+            require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+        }
         $this->plugin   = get_plugin_data( $this->file );
         $this->basename = plugin_basename( $this->file );
         $this->active   = is_plugin_active( $this->basename );
@@ -57,41 +61,39 @@ class ABCD_WC_Navex_Updater {
                 return false;
             }
 
-            $this->github_response = json_decode( wp_remote_retrieve_body( $response ) );
+            $body = wp_remote_retrieve_body( $response );
+            if ( ! empty( $body ) ) {
+                $this->github_response = json_decode( $body );
+            }
         }
         return $this->github_response;
     }
 
     public function modify_transient( $transient ) {
-        // Exit if transient is not an object or is null
-        if ( ! is_object( $transient ) ) {
+        if ( ! is_object( $transient ) || ! isset( $transient->checked ) ) {
             return $transient;
         }
 
-        // Initialiser la propriété response si elle n'existe pas
-        if ( ! isset( $transient->response ) ) {
-            $transient->response = array();
+        // S'assurer que les données du plugin sont chargées.
+        if ( empty( $this->plugin ) || empty( $this->plugin['Version'] ) ) {
+            return $transient;
         }
-        
-        // Vérifier si checked existe et n'est pas vide
-        if ( property_exists( $transient, 'checked' ) && ! empty( $transient->checked ) ) {
-                $this->get_repository_info();
 
-                if ( isset( $this->github_response ) && ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
-                    $obj = new stdClass();
-                    $obj->slug = $this->basename;
-                    $obj->new_version = $this->github_response->tag_name;
-                    $obj->url = $this->plugin['PluginURI'];
-                    
-                    $asset = $this->github_response->assets[0];
-                    if ( ! empty( $asset->browser_download_url ) ) {
-                        $obj->package = $asset->browser_download_url;
-                    }
+        $this->get_repository_info();
 
-                    $transient->response[ $this->basename ] = $obj;
-                }
+        if ( $this->github_response && ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
+            
+            if ( ! empty( $this->github_response->assets ) && ! empty( $this->github_response->assets[0]->browser_download_url ) ) {
+                $obj = new stdClass();
+                $obj->slug = $this->basename;
+                $obj->new_version = $this->github_response->tag_name;
+                $obj->url = $this->plugin['PluginURI'];
+                $obj->package = $this->github_response->assets[0]->browser_download_url;
+                
+                $transient->response[ $this->basename ] = $obj;
             }
         }
+        
         return $transient;
     }
 
@@ -99,7 +101,7 @@ class ABCD_WC_Navex_Updater {
         if ( ! empty( $args->slug ) && $args->slug == $this->basename ) {
             $this->get_repository_info();
 
-            if ( ! empty( $this->github_response ) ) {
+            if ( $this->github_response ) {
                 $obj = new stdClass();
                 $obj->name = $this->plugin['Name'];
                 $obj->slug = $this->basename;
@@ -108,12 +110,13 @@ class ABCD_WC_Navex_Updater {
                 $obj->homepage = $this->plugin['PluginURI'];
                 $obj->sections = array(
                     'description' => $this->plugin['Description'],
-                    'changelog' => $this->github_response->body,
+                    'changelog' => ! empty( $this->github_response->body ) ? $this->github_response->body : '',
                 );
-                $asset = $this->github_response->assets[0];
-                if ( ! empty( $asset->browser_download_url ) ) {
-                    $obj->download_link = $asset->browser_download_url;
+
+                if ( ! empty( $this->github_response->assets ) && ! empty( $this->github_response->assets[0]->browser_download_url ) ) {
+                    $obj->download_link = $this->github_response->assets[0]->browser_download_url;
                 }
+                
                 return $obj;
             }
         }
@@ -121,9 +124,11 @@ class ABCD_WC_Navex_Updater {
     }
 
     public function upgrader_source_selection( $source, $remote_source, $upgrader, $hook_extra = null ) {
-        // Vérifier si la mise à jour concerne ce plugin
         if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === $this->basename ) {
-            $new_source = trailingslashit( $remote_source ) . 'abcdo-wc-navex/';
+            // Logique de renommage de dossier plus robuste
+            global $wp_filesystem;
+            $new_source = trailingslashit( $remote_source ) . $wp_filesystem->find_folder( $remote_source );
+            
             if ( is_dir( $new_source ) ) {
                 return $new_source;
             }
