@@ -5,6 +5,14 @@ Toutes les modifications notables apportées à ce projet seront documentées da
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.16] - 2025-07-19
+
+### Corrigé
+- **Bug Critique du Système de Mise à Jour :** Résolution d'une erreur fatale (`Trying to access array offset on null`) qui empêchait le chargement de la liste des plugins et des notifications de mise à jour. La classe `ABCD_WC_Navex_Updater` charge maintenant ses dépendances de manière sécurisée pour éviter les conditions de course.
+
+### Modifié
+- **Fiabilité de la Classe Updater :** Ajout de gardes de sécurité et amélioration de la logique de gestion des réponses de l'API GitHub pour rendre le processus de mise à jour plus robuste.
+
 ## [1.0.15] - 2025-07-19
 
 ### Ajouté
