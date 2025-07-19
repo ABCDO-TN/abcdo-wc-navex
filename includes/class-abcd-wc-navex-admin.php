@@ -364,12 +364,9 @@ class ABCD_WC_Navex_Admin {
             wp_send_json_error( array( 'message' => $response->get_error_message() ) );
         }
 
-        // Formatter la réponse pour l'affichage
-        $html = '<ul>';
-        foreach ( $response as $key => $value ) {
-            $html .= sprintf( '<li><strong>%s:</strong> %s</li>', esc_html( ucwords( str_replace( '_', ' ', $key ) ) ), esc_html( $value ) );
-        }
-        $html .= '</ul>';
+        // La réponse est une chaîne de caractères, pas un tableau.
+        // On l'enveloppe simplement dans un paragraphe.
+        $html = '<p>' . esc_html( $response ) . '</p>';
 
         wp_send_json_success( array( 'html' => $html ) );
     }

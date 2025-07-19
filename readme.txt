@@ -3,7 +3,7 @@ Contributors: ABCDO
 Tags: woocommerce, shipping, delivery, navex, integration
 Requires at least: 5.0
 Tested up to: 6.5
-Stable tag: 1.0.17
+Stable tag: 1.0.18
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,10 @@ Ce plugin connecte votre boutique WooCommerce au service de livraison tunisien N
 4.  Allez dans `Navex Delivery > Settings` et entrez vos clés d'API Navex (ajout, récupération, suppression).
 
 == Changelog ==
+
+= 1.0.18 =
+*   Correction : L'appel API pour les détails d'un colis gère maintenant correctement les réponses non-JSON, corrigeant l'erreur "Réponse JSON invalide".
+*   Correction : Suppression du nettoyage agressif du cache des mises à jour, ce qui résout les incohérences dans la page des mises à jour de WordPress.
 
 = 1.0.17 =
 *   Fonctionnalité : Le bouton "Détails" est maintenant fonctionnel et ouvre une fenêtre modale avec les informations du colis.

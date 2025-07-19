@@ -114,8 +114,13 @@ class ABCD_WC_Navex_API {
         $body = wp_remote_retrieve_body( $response );
         $decoded_body = json_decode( $body, true );
 
+        // Pour la méthode get_parcel_details, la réponse n'est pas du JSON.
+        // On vérifie si la requête vient de là pour retourner le corps brut.
+        if ( strpos( $endpoint, '/get.php' ) !== false ) {
+            return $body;
+        }
+
         if ( json_last_error() !== JSON_ERROR_NONE ) {
-            // Pour le débogage, on peut retourner le corps brut en cas d'erreur JSON
             return new WP_Error( 'invalid_json', __( 'Réponse JSON invalide de l\'API Navex.', 'abcdo-wc-navex' ), array( 'body' => $body ) );
         }
 

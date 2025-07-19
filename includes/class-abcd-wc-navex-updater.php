@@ -45,11 +45,6 @@ class ABCD_WC_Navex_Updater {
         add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'modify_transient' ), 10, 1 );
         add_filter( 'plugins_api', array( $this, 'plugin_popup' ), 10, 3 );
         add_filter( 'upgrader_source_selection', array( $this, 'upgrader_source_selection' ), 10, 4 );
-        add_action( 'load-update-core.php', array( $this, 'clear_update_transient' ) );
-    }
-
-    public function clear_update_transient() {
-        set_site_transient( 'update_plugins', null );
     }
 
     private function get_repository_info() {
