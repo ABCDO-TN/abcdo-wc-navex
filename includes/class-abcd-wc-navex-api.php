@@ -44,9 +44,10 @@ class ABCD_WC_Navex_API {
      * Constructeur.
      */
     public function __construct() {
-        $this->token_add    = get_option( 'abcdo_wc_navex_api_token_add' );
-        $this->token_get    = get_option( 'abcdo_wc_navex_api_token_get' );
-        $this->token_delete = get_option( 'abcdo_wc_navex_api_token_delete' );
+        // Les tokens sont chiffrés dans la DB, on les déchiffre ici.
+        $this->token_add    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_add' ) );
+        $this->token_get    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_get' ) );
+        $this->token_delete = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_delete' ) );
     }
 
     /**
@@ -66,20 +67,20 @@ class ABCD_WC_Navex_API {
     }
 
     /**
-     * Récupérer les statuts des colis depuis l'API Navex.
+     * Récupérer les détails d'un colis depuis l'API Navex.
      *
+     * @param string $tracking_id L'ID de suivi du colis.
      * @return array|WP_Error La réponse de l'API ou une erreur.
      */
-    public function get_parcels_status() {
+    public function get_parcel_details( $tracking_id ) {
         if ( empty( $this->token_get ) ) {
             return new WP_Error( 'api_token_missing', __( 'Le token de récupération Navex n\'est pas configuré.', 'abcdo-wc-navex' ) );
         }
 
-        // L'endpoint exact doit être confirmé par la documentation de Navex.
-        // C'est une supposition basée sur les conventions.
-        $endpoint = self::$api_url . $this->token_get . '/v1/get.php';
+        // L'endpoint exact doit être confirmé, c'est une supposition.
+        // On ajoute le tracking_id à l'URL.
+        $endpoint = self::$api_url . $this->token_get . '/v1/get.php?tracking_id=' . urlencode( $tracking_id );
 
-        // La méthode est probablement GET, donc le corps est vide.
         return $this->make_request( $endpoint, array(), 'GET' );
     }
 
@@ -114,6 +115,7 @@ class ABCD_WC_Navex_API {
         $decoded_body = json_decode( $body, true );
 
         if ( json_last_error() !== JSON_ERROR_NONE ) {
+            // Pour le débogage, on peut retourner le corps brut en cas d'erreur JSON
             return new WP_Error( 'invalid_json', __( 'Réponse JSON invalide de l\'API Navex.', 'abcdo-wc-navex' ), array( 'body' => $body ) );
         }
 

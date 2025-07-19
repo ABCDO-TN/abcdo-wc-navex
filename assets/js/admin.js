@@ -8,12 +8,44 @@
             loadParcels();
         }
 
+        // Gestion de la modale de détails
+        var modal = $('#navex-details-modal');
+        var modalBody = $('#navex-modal-body');
+
+        // Ouvrir la modale
+        $(document).on('click', '.navex-details-btn', function(e) {
+            e.preventDefault();
+            var trackingId = $(this).data('tracking-id');
+            
+            modal.show();
+            modalBody.html('<span class="spinner is-active"></span>');
+
+            var data = {
+                action: 'abcd_wc_navex_get_parcel_details',
+                nonce: abcd_wc_navex_ajax.nonce,
+                tracking_id: trackingId
+            };
+
+            $.post(abcd_wc_navex_ajax.ajax_url, data, function(response) {
+                if (response.success) {
+                    modalBody.html(response.data.html);
+                } else {
+                    modalBody.html('<p>Erreur: ' + response.data.message + '</p>');
+                }
+            });
+        });
+
+        // Fermer la modale
+        $('#navex-modal-close, #navex-modal-backdrop').on('click', function() {
+            modal.hide();
+        });
+
+
         // Logique pour le bouton d'envoi sur la page de commande
         $('#abcd-wc-navex-send-btn').on('click', function() {
             var button = $(this);
             var spinner = button.next('.spinner');
             var orderId = button.data('order-id');
-            var nonce = $('#abcd_wc_navex_nonce').val();
 
             button.prop('disabled', true);
             spinner.css('visibility', 'visible');
@@ -21,16 +53,15 @@
             var data = {
                 action: 'abcd_wc_navex_send_parcel',
                 order_id: orderId,
-                nonce: nonce
+                nonce: abcd_wc_navex_ajax.nonce
             };
 
-            $.post(ajaxurl, data, function(response) {
+            $.post(abcd_wc_navex_ajax.ajax_url, data, function(response) {
                 button.prop('disabled', false);
                 spinner.css('visibility', 'hidden');
 
                 if (response.success) {
                     alert(response.data.message);
-                    // Mettre à jour l'affichage du statut sans recharger la page
                     button.closest('div').html('<p><strong>Navex Status:</strong> Envoyé</p>');
                 } else {
                     alert('Erreur: ' + response.data.message);
@@ -50,7 +81,7 @@
             };
 
             $.post(abcd_wc_navex_ajax.ajax_url, data, function(response) {
-                tableBody.empty(); // Vider le message de chargement
+                tableBody.empty();
 
                 if (response.success) {
                     if (response.data.length > 0) {
