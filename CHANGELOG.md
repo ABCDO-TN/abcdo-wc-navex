@@ -5,6 +5,12 @@ Toutes les modifications notables apportées à ce projet seront documentées da
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.18] - 2025-07-19
+
+### Corrigé
+- **Gestion des Réponses API :** L'appel pour les détails d'un colis traite maintenant correctement les réponses textuelles brutes, résolvant l'erreur "Réponse JSON invalide".
+- **Stabilité des Mises à Jour :** Suppression du nettoyage agressif et inutile du cache des mises à jour (`update_plugins` transient), ce qui stabilise le système de mises à jour de WordPress et résout les incohérences d'affichage.
+
 ## [1.0.17] - 2025-07-19
 
 ### Ajouté
