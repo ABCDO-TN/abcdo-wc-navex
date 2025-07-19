@@ -63,16 +63,21 @@ class ABCD_WC_Navex_Updater {
     }
 
     public function modify_transient( $transient ) {
-        // Exit if transient is not an object.
+        // Exit if transient is not an object or is null
         if ( ! is_object( $transient ) ) {
             return $transient;
         }
+
+        // Initialiser la propriété response si elle n'existe pas
+        if ( ! isset( $transient->response ) ) {
+            $transient->response = array();
+        }
         
-        if ( property_exists( $transient, 'checked' ) ) {
-            if ( $checked = $transient->checked ) {
+        // Vérifier si checked existe et n'est pas vide
+        if ( property_exists( $transient, 'checked' ) && ! empty( $transient->checked ) ) {
                 $this->get_repository_info();
 
-                if ( ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
+                if ( isset( $this->github_response ) && ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
                     $obj = new stdClass();
                     $obj->slug = $this->basename;
                     $obj->new_version = $this->github_response->tag_name;

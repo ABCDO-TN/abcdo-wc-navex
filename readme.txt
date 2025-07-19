@@ -27,11 +27,10 @@ Ce plugin connecte votre boutique WooCommerce au service de livraison tunisien N
 
 == Changelog ==
 
-= 2.0.0 =
-*   **Refonte Majeure**
-*   Fonctionnalité : La page de configuration est maintenant indépendante et se trouve dans un nouveau menu "Navex Delivery" avec une icône dédiée.
-*   Correction : Le problème d'envoi de commandes en double a été résolu.
-*   Correction : L'interprétation de la réponse de l'API Navex a été corrigée pour afficher les messages de succès de manière fiable.
+= 1.0.14 =
+*   Correction : Résolution d'une erreur fatale dans le système de mise à jour.
+*   Correction : Amélioration de la stabilité lors de la vérification des mises à jour.
+*   Correction : Le plugin vérifie maintenant correctement l'existence des données avant de les utiliser.
 
 = 1.0.13 =
 *   Amélioration : La vérification des mises à jour est maintenant forcée lors de la visite de la page des mises à jour de WordPress.
