@@ -15,46 +15,109 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ABCD_WC_Navex_Admin {
 
     /**
+     * L'icône du menu encodée en base64.
+     *
+     * @var string
+     */
+    private $menu_icon;
+
+    /**
      * Constructeur.
      */
     public function __construct() {
+        // Définir l'icône du menu
+        $this->menu_icon = 'data:image/svg+xml;base64,' . base64_encode(
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6L12 10L20 6L12 2Z" fill="white"/><path d="M4 18L12 22L20 18" fill="white"/><path d="M4 12L12 16L20 12" fill="white"/></svg>'
+        );
+
+        // Hooks principaux
+        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
         // Meta box sur la page de commande
         add_action( 'add_meta_boxes', array( $this, 'add_navex_meta_box' ) );
 
         // Action AJAX pour l'envoi manuel
         add_action( 'wp_ajax_abcd_wc_navex_send_parcel', array( $this, 'ajax_send_parcel' ) );
-
-        // Scripts
-        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+        add_action( 'wp_ajax_abcd_wc_navex_get_parcels', array( $this, 'ajax_get_parcels' ) );
 
         // Traductions
         add_action( 'init', array( $this, 'load_textdomain' ) );
-
-        // Page de configuration indépendante
-        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-        add_action( 'admin_init', array( $this, 'register_settings' ) );
     }
 
     /**
      * Ajouter le menu au tableau de bord.
      */
     public function add_admin_menu() {
+        // Menu principal (Tableau de bord des colis)
         add_menu_page(
-            __( 'Navex Delivery', 'abcdo-wc-navex' ),
+            __( 'Navex Dashboard', 'abcdo-wc-navex' ),
             __( 'Navex Delivery', 'abcdo-wc-navex' ),
             'manage_options',
             'abcdo-wc-navex',
-            array( $this, 'render_settings_page' ),
-            'dashicons-truck',
+            array( $this, 'render_dashboard_page' ),
+            $this->menu_icon,
             56
+        );
+
+        // Sous-menu pour les réglages
+        add_submenu_page(
+            'abcdo-wc-navex',
+            __( 'Settings', 'abcdo-wc-navex' ),
+            __( 'Settings', 'abcdo-wc-navex' ),
+            'manage_options',
+            'abcdo-wc-navex-settings',
+            array( $this, 'render_settings_page' )
         );
     }
 
     /**
-     * Enregistrer les réglages.
+     * Enregistrer les réglages avec la Settings API.
      */
     public function register_settings() {
-        register_setting( 'abcdo_wc_navex_options', 'abcdo_wc_navex_api_token' );
+        // Enregistrer la section de réglages
+        add_settings_section(
+            'abcdo_wc_navex_api_section',
+            __( 'API Credentials', 'abcdo-wc-navex' ),
+            null,
+            'abcdo-wc-navex-settings'
+        );
+
+        // Enregistrer les champs de réglage
+        $fields = array(
+            'api_token_add'    => __( 'Token d\'ajout', 'abcdo-wc-navex' ),
+            'api_token_get'    => __( 'Token de récupération', 'abcdo-wc-navex' ),
+            'api_token_delete' => __( 'Token de suppression', 'abcdo-wc-navex' ),
+        );
+
+        foreach ( $fields as $id => $title ) {
+            $option_name = 'abcdo_wc_navex_' . $id;
+            register_setting( 'abcdo_wc_navex_options', $option_name );
+            add_settings_field(
+                $option_name,
+                $title,
+                array( $this, 'render_text_field' ),
+                'abcdo-wc-navex-settings',
+                'abcdo_wc_navex_api_section',
+                array(
+                    'label_for' => $option_name,
+                    'name'      => $option_name,
+                )
+            );
+        }
+    }
+
+    /**
+     * Afficher un champ de texte standard pour la Settings API.
+     */
+    public function render_text_field( $args ) {
+        $option_value = get_option( $args['name'] );
+        printf(
+            '<input type="text" id="%1$s" name="%1$s" value="%2$s" class="regular-text" />',
+            esc_attr( $args['name'] ),
+            esc_attr( $option_value )
+        );
     }
 
     /**
@@ -67,19 +130,37 @@ class ABCD_WC_Navex_Admin {
             <form action="options.php" method="post">
                 <?php
                 settings_fields( 'abcdo_wc_navex_options' );
-                do_settings_sections( 'abcdo-wc-navex' );
+                do_settings_sections( 'abcdo-wc-navex-settings' );
+                submit_button( __( 'Save Settings', 'abcdo-wc-navex' ) );
                 ?>
-                <table class="form-table">
-                    <tr valign="top">
-                        <th scope="row"><?php _e( 'Token d\'API Navex', 'abcdo-wc-navex' ); ?></th>
-                        <td>
-                            <input type="text" name="abcdo_wc_navex_api_token" value="<?php echo esc_attr( get_option('abcdo_wc_navex_api_token') ); ?>" size="50" />
-                            <p class="description"><?php _e( 'Entrez votre token d\'authentification fourni par Navex.', 'abcdo-wc-navex' ); ?></p>
-                        </td>
-                    </tr>
-                </table>
-                <?php submit_button(); ?>
             </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Afficher la page du tableau de bord des colis.
+     */
+    public function render_dashboard_page() {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+            <p><?php esc_html_e( 'Real-time tracking of your Navex parcels.', 'abcdo-wc-navex' ); ?></p>
+            
+            <table id="navex-parcels-table" class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Order ID', 'abcdo-wc-navex' ); ?></th>
+                        <th><?php esc_html_e( 'Navex Tracking ID', 'abcdo-wc-navex' ); ?></th>
+                        <th><?php esc_html_e( 'Status', 'abcdo-wc-navex' ); ?></th>
+                        <th><?php esc_html_e( 'Shipping Date', 'abcdo-wc-navex' ); ?></th>
+                        <th><?php esc_html_e( 'Actions', 'abcdo-wc-navex' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5"><?php esc_html_e( 'Loading parcels...', 'abcdo-wc-navex' ); ?></td></tr>
+                </tbody>
+            </table>
         </div>
         <?php
     }
@@ -88,23 +169,23 @@ class ABCD_WC_Navex_Admin {
      * Charge les traductions du plugin.
      */
     public function load_textdomain() {
-        load_plugin_textdomain( 'abcdo-wc-navex', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+        load_plugin_textdomain( 'abcdo-wc-navex', false, dirname( plugin_basename( ABCDO_WC_NAVEX_PATH . 'abcdo-wc-navex.php' ) ) . '/languages' );
     }
 
     /**
-     * Charger les scripts et styles pour l'admin (compatible HPOS).
+     * Charger les scripts et styles pour l'admin.
      */
-    public function enqueue_scripts() {
+    public function enqueue_scripts( $hook_suffix ) {
         $screen = get_current_screen();
         if ( ! $screen ) {
             return;
         }
 
-        // ID de l'écran HPOS et de l'écran classique
+        // Scripts pour la page de commande (classique et HPOS)
         $hpos_screen_id = wc_get_page_screen_id( 'shop-order' );
         $classic_screen_id = 'shop_order';
 
-        if ( $screen->id === $classic_screen_id || $screen->id === $hpos_screen_id ) {
+        if ( $screen->id === $classic_screen_id || $screen->id === $hpos_screen_id || strpos( $hook_suffix, 'abcdo-wc-navex' ) !== false ) {
             wp_enqueue_script(
                 'abcd-wc-navex-admin-js',
                 ABCDO_WC_NAVEX_URL . 'assets/js/admin.js',
@@ -112,16 +193,18 @@ class ABCD_WC_Navex_Admin {
                 ABCDO_WC_NAVEX_VERSION,
                 true
             );
+            wp_localize_script( 'abcd-wc-navex-admin-js', 'abcd_wc_navex_ajax', array(
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'abcd_wc_navex_ajax_nonce' ),
+            ) );
         }
     }
 
     /**
-     * Ajouter le meta box sur la page de commande (compatible HPOS).
+     * Ajouter le meta box sur la page de commande.
      */
     public function add_navex_meta_box() {
-        // Enregistrer la meta box pour l'écran classique et l'écran HPOS.
         $screens = array_unique( array( 'shop_order', wc_get_page_screen_id( 'shop-order' ) ) );
-
         foreach ( $screens as $screen ) {
             add_meta_box(
                 'abcd-wc-navex-meta-box',
@@ -135,34 +218,27 @@ class ABCD_WC_Navex_Admin {
     }
 
     /**
-     * Afficher le contenu du meta box (compatible HPOS).
-     *
-     * @param WP_Post|WC_Order $post_or_order_object L'objet post ou commande.
+     * Afficher le contenu du meta box.
      */
     public function render_meta_box_content( $post_or_order_object ) {
         $order = ( $post_or_order_object instanceof WP_Post ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
-
         if ( ! $order ) {
             return;
         }
-
-        // Ajouter un nonce pour la sécurité
-        wp_nonce_field( 'abcd_wc_navex_send_parcel_action', 'abcd_wc_navex_nonce' );
 
         $order_id = $order->get_id();
         $status = $order->get_meta( '_navex_shipping_status' );
 
         echo '<p>';
         if ( ! empty( $status ) ) {
-            echo '<strong>' . esc_html__( 'Statut Navex :', 'abcdo-wc-navex' ) . '</strong> ' . esc_html( $status );
+            echo '<strong>' . esc_html__( 'Navex Status:', 'abcdo-wc-navex' ) . '</strong> ' . esc_html( $status );
         } else {
-            echo esc_html__( 'La commande n\'a pas encore été envoyée à Navex.', 'abcdo-wc-navex' );
+            echo esc_html__( 'Order has not been sent to Navex yet.', 'abcdo-wc-navex' );
         }
         echo '</p>';
 
-        // Ne pas afficher le bouton si la commande a déjà été envoyée
         if ( 'Envoyé' !== $status ) {
-            echo '<button type="button" id="abcd-wc-navex-send-btn" class="button button-primary" data-order-id="' . esc_attr( $order_id ) . '">' . esc_html__( 'Envoyer à Navex', 'abcdo-wc-navex' ) . '</button>';
+            echo '<button type="button" id="abcd-wc-navex-send-btn" class="button button-primary" data-order-id="' . esc_attr( $order_id ) . '">' . esc_html__( 'Send to Navex', 'abcdo-wc-navex' ) . '</button>';
             echo '<span class="spinner" style="float: none; margin-top: 4px;"></span>';
         }
     }
@@ -171,25 +247,20 @@ class ABCD_WC_Navex_Admin {
      * Gérer la requête AJAX pour l'envoi manuel.
      */
     public function ajax_send_parcel() {
-        // Vérifier le nonce et les permissions
-        if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'abcd_wc_navex_send_parcel_action' ) ) {
-            wp_send_json_error( array( 'message' => 'Échec de la vérification de sécurité.' ) );
-        }
+        check_ajax_referer( 'abcd_wc_navex_ajax_nonce', 'nonce' );
         if ( ! current_user_can( 'edit_shop_orders' ) ) {
-            wp_send_json_error( array( 'message' => 'Vous n\'avez pas les permissions nécessaires.' ) );
+            wp_send_json_error( array( 'message' => 'Permission denied.' ) );
         }
         if ( ! isset( $_POST['order_id'] ) ) {
-            wp_send_json_error( array( 'message' => 'ID de commande manquant.' ) );
+            wp_send_json_error( array( 'message' => 'Missing order ID.' ) );
         }
 
         $order_id = intval( $_POST['order_id'] );
         $order = wc_get_order( $order_id );
-
         if ( ! $order ) {
-            wp_send_json_error( array( 'message' => 'Commande non trouvée.' ) );
+            wp_send_json_error( array( 'message' => 'Order not found.' ) );
         }
 
-        // Préparer les données pour l'API Navex
         $data = array(
             'prix'        => $order->get_total(),
             'nom'         => $order->get_formatted_shipping_full_name(),
@@ -204,10 +275,9 @@ class ABCD_WC_Navex_Admin {
             'echange'     => '',
             'article'     => '',
             'nb_echange'  => '',
-            'ouvrir'      => 'Non', // ou 'Oui' selon la configuration
+            'ouvrir'      => 'Non',
         );
 
-        // Envoyer les données à l'API
         $api = new ABCD_WC_Navex_API();
         $response = $api->send_parcel( $data );
 
@@ -215,11 +285,9 @@ class ABCD_WC_Navex_Admin {
             wp_send_json_error( array( 'message' => $response->get_error_message() ) );
         }
 
-        // Vérifier la réponse de l'API (condition de succès élargie)
         if ( ( isset( $response['status'] ) && $response['status_message'] === 'Product Added.' ) || ( isset( $response['status'] ) && is_numeric( $response['status'] ) ) ) {
-            // Mettre à jour le statut dans les métadonnées de la commande (compatible HPOS)
             $order->update_meta_data( '_navex_shipping_status', 'Envoyé' );
-            $order->add_order_note( 'Colis envoyé à Navex avec succès. Réponse de l\'API : ' . json_encode( $response ) );
+            $order->add_order_note( 'Colis envoyé à Navex avec succès. Réponse de l\'API : ' . wp_json_encode( $response ) );
             $order->save();
             wp_send_json_success( array( 'message' => 'Colis envoyé à Navex avec succès !' ) );
         } else {
@@ -227,5 +295,36 @@ class ABCD_WC_Navex_Admin {
             $order->add_order_note( 'Erreur lors de l\'envoi à Navex : ' . $error_message );
             wp_send_json_error( array( 'message' => $error_message ) );
         }
+    }
+
+    /**
+     * Gérer la requête AJAX pour récupérer les colis.
+     */
+    public function ajax_get_parcels() {
+        check_ajax_referer( 'abcd_wc_navex_ajax_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => 'Permission denied.' ) );
+        }
+
+        // Cette partie sera développée quand l'endpoint de récupération sera connu.
+        // Pour l'instant, on renvoie des données factices.
+        $dummy_data = array(
+            array(
+                'order_id' => '12345',
+                'tracking_id' => 'NVX67890',
+                'status' => 'En transit',
+                'date' => '2024-07-19',
+                'actions' => '<a href="#">Détails</a>'
+            ),
+            array(
+                'order_id' => '12346',
+                'tracking_id' => 'NVX67891',
+                'status' => 'Livré',
+                'date' => '2024-07-18',
+                'actions' => '<a href="#">Détails</a>'
+            )
+        );
+
+        wp_send_json_success( $dummy_data );
     }
 }
