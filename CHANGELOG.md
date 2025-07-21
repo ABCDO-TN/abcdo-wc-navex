@@ -5,6 +5,11 @@ Toutes les modifications notables apportées à ce projet seront documentées da
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.19] - 2025-07-21
+
+### Corrigé
+- **Compatibilité HPOS :** La requête `wc_get_orders` dans la fonction `ajax_get_parcels` a été réécrite pour être entièrement compatible avec le stockage de commandes haute performance (HPOS). Cela résout l'erreur fatale `WC_Order_Data_Store_CPT::query was called incorrectly` et corrige la désynchronisation des colis.
+
 ## [1.0.18] - 2025-07-19
 
 ### Corrigé
