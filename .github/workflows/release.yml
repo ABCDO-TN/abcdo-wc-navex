@@ -1,70 +1,56 @@
-name: Release New Version
+name: Create Plugin ZIP on Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Get Plugin Version
-        id: get_version
-        run: |
-          VERSION=$(grep -oP 'Version:\s*\K[0-9.]+' abcdo-wc-navex.php)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Check if Release already exists
-        id: check_release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            const releaseExists = releases.data.some(r => r.tag_name === `v${process.env.PLUGIN_VERSION}`);
-            return releaseExists;
-        env:
-          PLUGIN_VERSION: ${{ steps.get_version.outputs.version }}
+    - name: Create plugin ZIP
+      run: |
+        PLUGIN_SLUG="abcdo-wc-navex"
+        zip -r "${PLUGIN_SLUG}.zip" . -x ".git/*" ".github/*" "README.md"
 
-      - name: Proceed if Release does not exist
-        if: steps.check_release.outputs.result == 'false'
-        run: echo "Release for v${{ steps.get_version.outputs.version }} does not exist. Proceeding..."
+    - name: Get Release Body
+      id: get_release_body
+      run: |
+        CHANGELOG_BODY=$(awk '/## \['"$VERSION"'\]/{flag=1; next} /## \[/{flag=0} flag' CHANGELOG.md)
+        CHANGELOG_BODY="${CHANGELOG_BODY//'%'/'%25'}"
+        CHANGELOG_BODY="${CHANGELOG_BODY//$'\n'/'%0A'}"
+        CHANGELOG_BODY="${CHANGELOG_BODY//$'\r'/'%0D'}"
+        echo "BODY<<EOF" >> $GITHUB_ENV
+        echo "$CHANGELOG_BODY" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
-      - name: Get Changelog
-        if: steps.check_release.outputs.result == 'false'
-        id: get_changelog
-        run: |
-          CHANGELOG=$(awk '/= ${{ steps.get_version.outputs.version }} =/{flag=1; next} /= [0-9]/{flag=0} flag' readme.txt)
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "changelog=${CHANGELOG}" >> $GITHUB_OUTPUT
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: "Release ${{ env.VERSION }}"
+        body: ${{ env.BODY }}
+        draft: false
+        prerelease: false
 
-      - name: Create Release Directory
-        if: steps.check_release.outputs.result == 'false'
-        run: |
-          mkdir -p abcdo-wc-navex
-          rsync -av --progress . ./abcdo-wc-navex --exclude ".git" --exclude ".github" --exclude "abcdo-wc-navex"
-
-      - name: Create Zip Archive
-        if: steps.check_release.outputs.result == 'false'
-        run: zip -r abcdo-wc-navex.zip ./abcdo-wc-navex
-
-      - name: Create Release and Upload Asset
-        if: steps.check_release.outputs.result == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name:  Version ${{ steps.get_version.outputs.version }}
-          body: ${{ steps.get_changelog.outputs.changelog }}
-          files: abcdo-wc-navex.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./abcdo-wc-navex.zip
+        asset_name: abcdo-wc-navex.zip
+        asset_content_type: application/zip

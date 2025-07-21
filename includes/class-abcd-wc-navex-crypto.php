@@ -1,6 +1,6 @@
 <?php
 /**
- * Fichier pour la gestion du chiffrement.
+ * Encryption management file.
  *
  * @package Abcdo_Wc_Navex
  */
@@ -10,22 +10,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Classe pour gérer le chiffrement et le déchiffrement des données.
+ * Class to handle data encryption and decryption.
  */
 class ABCD_WC_Navex_Crypto {
 
     /**
-     * L'algorithme de chiffrement.
+     * The encryption algorithm.
      *
      * @var string
      */
     private const CIPHER_ALGO = 'aes-256-cbc';
 
     /**
-     * Chiffrer une chaîne de caractères.
+     * Encrypt a string.
      *
-     * @param string $data La chaîne à chiffrer.
-     * @return string|false La chaîne chiffrée ou false en cas d'erreur.
+     * @param string $data The string to encrypt.
+     * @return string|false The encrypted string or false on error.
      */
     public static function encrypt( $data ) {
         $key = self::get_encryption_key();
@@ -42,10 +42,10 @@ class ABCD_WC_Navex_Crypto {
     }
 
     /**
-     * Déchiffrer une chaîne de caractères.
+     * Decrypt a string.
      *
-     * @param string $data La chaîne chiffrée.
-     * @return string|false La chaîne déchiffrée ou false en cas d'erreur.
+     * @param string $data The encrypted string.
+     * @return string|false The decrypted string or false on error.
      */
     public static function decrypt( $data ) {
         $key = self::get_encryption_key();
@@ -63,9 +63,9 @@ class ABCD_WC_Navex_Crypto {
     }
 
     /**
-     * Générer une clé de chiffrement à partir des sels WordPress.
+     * Generate an encryption key from WordPress salts.
      *
-     * @return string La clé de chiffrement.
+     * @return string The encryption key.
      */
     private static function get_encryption_key() {
         $key = '';
@@ -79,7 +79,7 @@ class ABCD_WC_Navex_Crypto {
             $key .= LOGGED_IN_KEY;
         }
 
-        // S'assurer que la clé a la bonne longueur pour AES-256
+        // Ensure the key is the correct length for AES-256
         return substr( hash( 'sha256', $key ), 0, 32 );
     }
 }

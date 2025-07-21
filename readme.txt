@@ -3,101 +3,109 @@ Contributors: ABCDO
 Tags: woocommerce, shipping, delivery, navex, integration
 Requires at least: 5.0
 Tested up to: 6.5
-Stable tag: 1.0.19
+Stable tag: 1.0.21
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Intègre l'API de livraison Navex avec WooCommerce pour automatiser la création de colis et le suivi.
+Integrates the Navex delivery API with WooCommerce to automate parcel creation and tracking.
 
 == Description ==
 
-Ce plugin connecte votre boutique WooCommerce au service de livraison tunisien Navex. Il permet de :
-*   **Créer des colis** automatiquement ou manuellement depuis les commandes WooCommerce.
-*   **Configurer votre clé d'API** Navex en toute sécurité.
-*   **Suivre le statut** de l'envoi directement depuis la page de la commande.
-*   **Recevoir des mises à jour** du plugin directement depuis GitHub.
+This plugin connects your WooCommerce store to the Tunisian delivery service Navex. It allows you to:
+*   **Create parcels** automatically or manually from WooCommerce orders.
+*   **Securely configure** your Navex API key.
+*   **Track the shipping status** directly from the order page.
+*   **Receive plugin updates** directly from GitHub.
 
 == Installation ==
 
-1.  Téléchargez le fichier `.zip` du plugin.
-2.  Allez dans `WordPress Admin > Extensions > Ajouter` et cliquez sur `Téléverser une extension`.
-3.  Choisissez le fichier `.zip` et activez le plugin.
-4.  Allez dans `Navex Delivery > Settings` et entrez vos clés d'API Navex (ajout, récupération, suppression).
+1.  Download the `.zip` file of the plugin.
+2.  Go to `WordPress Admin > Plugins > Add New` and click `Upload Plugin`.
+3.  Choose the `.zip` file and activate the plugin.
+4.  Go to `Navex Delivery > Settings` and enter your Navex API keys (add, get, delete).
 
 == Changelog ==
 
+= 1.0.21 =
+*   Feature: Implemented a GitHub Actions workflow to automate the creation of release packages.
+*   Enhancement: Verified and confirmed performance best practices, such as conditional loading of assets.
+
+= 1.0.20 =
+*   Enhancement: Full internationalization of the plugin into English (UI, code comments, documentation).
+*   Fix: All identified PHP errors, warnings, and notices have been resolved.
+
 = 1.0.19 =
-*   Correction : La requête pour récupérer les commandes est maintenant compatible avec le stockage de commandes haute performance (HPOS), résolvant une erreur fatale et la désynchronisation des colis.
+*   Fix: The query to retrieve orders is now compatible with High-Performance Order Storage (HPOS), resolving a fatal error and parcel desynchronization.
 
 = 1.0.18 =
-*   Correction : L'appel API pour les détails d'un colis gère maintenant correctement les réponses non-JSON, corrigeant l'erreur "Réponse JSON invalide".
-*   Correction : Suppression du nettoyage agressif du cache des mises à jour, ce qui résout les incohérences dans la page des mises à jour de WordPress.
+*   Fix: The API call for parcel details now correctly handles non-JSON responses, fixing the "Invalid JSON response" error.
+*   Fix: Removed aggressive update cache clearing, which resolves inconsistencies on the WordPress Updates page.
 
 = 1.0.17 =
-*   Fonctionnalité : Le bouton "Détails" est maintenant fonctionnel et ouvre une fenêtre modale avec les informations du colis.
-*   Fonctionnalité : Ajout du chiffrement pour les tokens d'API stockés en base de données.
-*   Correction : La liste des colis est maintenant synchronisée avec les commandes WooCommerce, les colis liés à des commandes supprimées n'apparaissent plus.
-*   Correction : Le chargement des fichiers de traduction se fait maintenant sur le bon hook pour éviter les notices PHP.
+*   Feature: The "Details" button is now functional and opens a modal window with the parcel information.
+*   Feature: Added encryption for API tokens stored in the database.
+*   Fix: The list of parcels is now synchronized with WooCommerce orders; parcels linked to deleted orders no longer appear.
+*   Fix: Translation files are now loaded on the correct hook to prevent PHP notices.
 
 = 1.0.16 =
-*   Correction : Résolution d'une erreur fatale dans le système de mise à jour qui provoquait la disparition des plugins et des notifications de mise à jour.
-*   Amélioration : La classe de mise à jour est maintenant plus robuste et évite les conditions de course à l'initialisation.
+*   Fix: Resolved a fatal error in the update system that caused plugins and update notifications to disappear.
+*   Enhancement: The updater class is now more robust and avoids race conditions on initialization.
 
 = 1.0.15 =
-*   Fonctionnalité : Ajout d'un tableau de bord de suivi des colis (`Navex Delivery`).
-*   Fonctionnalité : Refonte de la page de réglages avec des champs dédiés pour les tokens d'ajout, de récupération et de suppression.
-*   Amélioration : Ajout d'une icône de menu personnalisée pour une meilleure identification.
-*   Amélioration : La logique AJAX est maintenant gérée par un script dédié et sécurisée par un nonce unifié.
+*   Feature: Added a parcel tracking dashboard (`Navex Delivery`).
+*   Feature: Redesigned the settings page with dedicated fields for add, get, and delete tokens.
+*   Enhancement: Added a custom menu icon for better identification.
+*   Enhancement: AJAX logic is now handled by a dedicated script and secured by a unified nonce.
 
 = 1.0.14 =
-*   Correction : Résolution d'une erreur fatale dans le système de mise à jour.
-*   Correction : Amélioration de la stabilité lors de la vérification des mises à jour.
-*   Correction : Le plugin vérifie maintenant correctement l'existence des données avant de les utiliser.
+*   Fix: Resolved a fatal error in the update system.
+*   Fix: Improved stability when checking for updates.
+*   Fix: The plugin now correctly checks for the existence of data before using it.
 
 = 1.0.13 =
-*   Amélioration : La vérification des mises à jour est maintenant forcée lors de la visite de la page des mises à jour de WordPress.
+*   Enhancement: The update check is now forced when visiting the WordPress update page.
 
 = 1.0.12 =
-*   Correction : Amélioration de la compatibilité HPOS pour l'affichage de la boîte d'envoi Navex.
+*   Fix: Improved HPOS compatibility for the display of the Navex shipping box.
 
 = 1.0.11 =
-*   Correction : Résolution d'une erreur fatale de compatibilité HPOS avec les anciennes versions de WooCommerce.
+*   Fix: Resolved a fatal HPOS compatibility error with older versions of WooCommerce.
 
 = 1.0.10 =
-*   Correction : Amélioration de la compatibilité HPOS (High-Performance Order Storage).
-*   Correction : Optimisation du chargement des traductions pour éviter les avertissements.
-*   Correction : Suppression du constructeur en double dans la classe Admin.
+*   Fix: Improved HPOS (High-Performance Order Storage) compatibility.
+*   Fix: Optimized translation loading to avoid warnings.
+*   Fix: Removed duplicate constructor in the Admin class.
 
 = 1.0.8 =
-*   Fonctionnalité : Automatisation complète du processus de release. Le déploiement se fait maintenant automatiquement lors d'un push sur la branche main, en utilisant la version et le changelog des fichiers du plugin.
+*   Feature: Full automation of the release process. Deployment is now done automatically on a push to the main branch, using the version and changelog from the plugin files.
 
 = 1.0.7 =
-*   Correction : Amélioration majeure du système de mise à jour automatique pour résoudre l'erreur "cURL error 52". La structure de l'archive et la logique de post-installation ont été corrigées.
+*   Fix: Major improvement of the automatic update system to resolve the "cURL error 52". The archive structure and post-installation logic have been corrected.
 
 = 1.0.6 =
-*   Correction : Résolution d'une erreur fatale sur la page de commande lors de l'utilisation du stockage des commandes haute performance (HPOS).
-*   Correction : Suppression d'un avertissement "deprecated" de PHP 8.
+*   Fix: Resolved a fatal error on the order page when using High-Performance Order Storage (HPOS).
+*   Fix: Removed a "deprecated" warning from PHP 8.
 
 = 1.0.5 =
-*   Correction : Assure la compatibilité de la boîte d'envoi Navex avec le stockage des commandes haute performance (HPOS).
+*   Fix: Ensures compatibility of the Navex shipping box with High-Performance Order Storage (HPOS).
 
 = 1.0.4 =
-*   Fonctionnalité : Finalisation du système de mise à jour automatique via GitHub. Le plugin détecte maintenant les nouvelles versions.
+*   Feature: Finalization of the automatic update system via GitHub. The plugin now detects new versions.
 
 = 1.0.3 =
-*   Fonctionnalité : Implémentation de la logique d'envoi de colis à Navex depuis la page de commande.
-*   Fonctionnalité : Ajout du script AJAX pour l'envoi manuel.
+*   Feature: Implementation of the logic for sending parcels to Navex from the order page.
+*   Feature: Added AJAX script for manual sending.
 
 = 1.0.2 =
-*   Correction : Ajout de la déclaration de compatibilité avec le stockage des commandes haute performance (HPOS) de WooCommerce.
+*   Fix: Added compatibility declaration with WooCommerce's High-Performance Order Storage (HPOS).
 
 = 1.0.1 =
-*   Correction : Résolution des erreurs du workflow GitHub Actions pour la création des releases.
+*   Fix: Resolved errors in the GitHub Actions workflow for creating releases.
 
 = 1.0.0 =
-*   Version initiale.
-*   Création de la structure du plugin.
-*   Intégration de l'API Navex pour la création de colis.
-*   Page de configuration pour la clé d'API.
-*   Mise en place du système de mise à jour via GitHub.
+*   Initial version.
+*   Creation of the plugin structure.
+*   Integration of the Navex API for parcel creation.
+*   Configuration page for the API key.
+*   Implementation of the update system via GitHub.
