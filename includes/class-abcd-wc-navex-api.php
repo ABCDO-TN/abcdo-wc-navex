@@ -1,6 +1,6 @@
 <?php
 /**
- * Fichier pour le client API Navex.
+ * Navex API client file.
  *
  * @package Abcdo_Wc_Navex
  */
@@ -10,55 +10,55 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Classe pour communiquer avec l'API Navex.
+ * Class to communicate with the Navex API.
  */
 class ABCD_WC_Navex_API {
 
     /**
-     * L'URL de base de l'API Navex.
+     * The base URL for the Navex API.
      *
      * @var string
      */
     private static $api_url = 'https://app.navex.tn/api/';
 
     /**
-     * Le token d'API pour l'ajout.
+     * The API token for adding parcels.
      * @var string
      */
     private $token_add;
 
     /**
-     * Le token d'API pour la récupération.
+     * The API token for retrieving parcels.
      * @var string
      */
     private $token_get;
 
     /**
-     * Le token d'API pour la suppression.
+     * The API token for deleting parcels.
      * @var string
      */
     private $token_delete;
 
 
     /**
-     * Constructeur.
+     * Constructor.
      */
     public function __construct() {
-        // Les tokens sont chiffrés dans la DB, on les déchiffre ici.
+        // Tokens are encrypted in the DB, decrypt them here.
         $this->token_add    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_add' ) );
         $this->token_get    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_get' ) );
         $this->token_delete = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_delete' ) );
     }
 
     /**
-     * Envoyer un colis à l'API Navex.
+     * Send a parcel to the Navex API.
      *
-     * @param array $data Les données du colis.
-     * @return array|WP_Error La réponse de l'API ou une erreur.
+     * @param array $data The parcel data.
+     * @return array|WP_Error The API response or an error.
      */
     public function send_parcel( $data ) {
         if ( empty( $this->token_add ) ) {
-            return new WP_Error( 'api_token_missing', __( 'Le token d\'ajout Navex n\'est pas configuré.', 'abcdo-wc-navex' ) );
+            return new WP_Error( 'api_token_missing', __( 'Navex Add Token is not configured.', 'abcdo-wc-navex' ) );
         }
 
         $endpoint = self::$api_url . $this->token_add . '/v1/post.php';
@@ -67,30 +67,30 @@ class ABCD_WC_Navex_API {
     }
 
     /**
-     * Récupérer les détails d'un colis depuis l'API Navex.
+     * Get a parcel's details from the Navex API.
      *
-     * @param string $tracking_id L'ID de suivi du colis.
-     * @return array|WP_Error La réponse de l'API ou une erreur.
+     * @param string $tracking_id The parcel's tracking ID.
+     * @return string|WP_Error The API response or an error.
      */
     public function get_parcel_details( $tracking_id ) {
         if ( empty( $this->token_get ) ) {
-            return new WP_Error( 'api_token_missing', __( 'Le token de récupération Navex n\'est pas configuré.', 'abcdo-wc-navex' ) );
+            return new WP_Error( 'api_token_missing', __( 'Navex Get Token is not configured.', 'abcdo-wc-navex' ) );
         }
 
-        // L'endpoint exact doit être confirmé, c'est une supposition.
-        // On ajoute le tracking_id à l'URL.
+        // The exact endpoint needs to be confirmed. This is a guess.
+        // We add the tracking_id to the URL.
         $endpoint = self::$api_url . $this->token_get . '/v1/get.php?tracking_id=' . urlencode( $tracking_id );
 
         return $this->make_request( $endpoint, array(), 'GET' );
     }
 
     /**
-     * Fonction utilitaire pour effectuer les requêtes à l'API.
+     * Utility function to make requests to the API.
      *
-     * @param string $endpoint L'URL complète de l'endpoint.
-     * @param array  $data Les données à envoyer.
-     * @param string $method La méthode HTTP (POST, GET).
-     * @return array|WP_Error La réponse de l'API ou une erreur.
+     * @param string $endpoint The full endpoint URL.
+     * @param array  $data The data to send.
+     * @param string $method The HTTP method (POST, GET).
+     * @return array|string|WP_Error The API response or an error.
      */
     private function make_request( $endpoint, $data = array(), $method = 'POST' ) {
         $args = array(
@@ -112,16 +112,17 @@ class ABCD_WC_Navex_API {
         }
 
         $body = wp_remote_retrieve_body( $response );
-        $decoded_body = json_decode( $body, true );
-
-        // Pour la méthode get_parcel_details, la réponse n'est pas du JSON.
-        // On vérifie si la requête vient de là pour retourner le corps brut.
+        
+        // For the get_parcel_details method, the response is not JSON.
+        // We check if the request comes from there to return the raw body.
         if ( strpos( $endpoint, '/get.php' ) !== false ) {
             return $body;
         }
 
+        $decoded_body = json_decode( $body, true );
+
         if ( json_last_error() !== JSON_ERROR_NONE ) {
-            return new WP_Error( 'invalid_json', __( 'Réponse JSON invalide de l\'API Navex.', 'abcdo-wc-navex' ), array( 'body' => $body ) );
+            return new WP_Error( 'invalid_json', __( 'Invalid JSON response from Navex API.', 'abcdo-wc-navex' ), array( 'body' => $body ) );
         }
 
         return $decoded_body;

@@ -1,52 +1,66 @@
 # Changelog
 
-Toutes les modifications notables apportées à ce projet seront documentées dans ce fichier.
+All notable changes to this project will be documented in this file.
 
-Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.21] - 2025-07-21
+
+### Added
+- **Automated Release Workflow:** Implemented a GitHub Actions workflow that automatically builds the plugin `.zip` archive, creates a GitHub Release, and populates the changelog from the `CHANGELOG.md` file when a new version tag is pushed.
+
+### Changed
+- **Performance:** Verified that asset loading is optimized and follows WordPress best practices to ensure minimal impact on admin performance.
+
+## [1.0.20] - 2025-07-21
+
+### Changed
+- **Full Internationalization:** The entire plugin (UI, code comments, documentation) has been translated into English, which is now the default source language.
+- **Code Refactoring:** Performed a full code review. All identified PHP errors, warnings, and notices have been resolved. The code now fully complies with WordPress standards.
 
 ## [1.0.19] - 2025-07-21
 
-### Corrigé
-- **Compatibilité HPOS :** La requête `wc_get_orders` dans la fonction `ajax_get_parcels` a été réécrite pour être entièrement compatible avec le stockage de commandes haute performance (HPOS). Cela résout l'erreur fatale `WC_Order_Data_Store_CPT::query was called incorrectly` et corrige la désynchronisation des colis.
+### Fixed
+- **HPOS Compatibility:** The `wc_get_orders` query in the `ajax_get_parcels` function has been rewritten to be fully compatible with High-Performance Order Storage (HPOS). This resolves the fatal error `WC_Order_Data_Store_CPT::query was called incorrectly` and fixes parcel desynchronization.
 
 ## [1.0.18] - 2025-07-19
 
-### Corrigé
-- **Gestion des Réponses API :** L'appel pour les détails d'un colis traite maintenant correctement les réponses textuelles brutes, résolvant l'erreur "Réponse JSON invalide".
-- **Stabilité des Mises à Jour :** Suppression du nettoyage agressif et inutile du cache des mises à jour (`update_plugins` transient), ce qui stabilise le système de mises à jour de WordPress et résout les incohérences d'affichage.
+### Fixed
+- **API Response Handling:** The API call for parcel details now correctly handles raw text responses, resolving the "Invalid JSON response" error.
+- **Update System Stability:** Removed aggressive and unnecessary clearing of the update cache (`update_plugins` transient), which stabilizes the WordPress update system and resolves display inconsistencies.
 
 ## [1.0.17] - 2025-07-19
 
-### Ajouté
-- **Chiffrement des Tokens :** Les tokens d'API sont maintenant chiffrés en base de données en utilisant les sels de sécurité de WordPress pour une sécurité accrue.
-- **Fonctionnalité "Détails du Colis" :** Le bouton "Détails" dans le tableau de bord ouvre désormais une fenêtre modale affichant les informations complètes du colis récupérées via une nouvelle requête API.
+### Added
+- **Token Encryption:** API tokens are now encrypted in the database using WordPress security salts for enhanced security.
+- **"Parcel Details" Feature:** The "Details" button on the dashboard now opens a modal window displaying the full parcel information retrieved via a new API request.
 
-### Corrigé
-- **Synchronisation des Colis :** La liste des colis affichée dans le tableau de bord est maintenant directement liée aux commandes WooCommerce existantes. Les colis dont les commandes ont été supprimées n'apparaissent plus.
-- **Chargement des Traductions :** Le "textdomain" est maintenant chargé sur le hook `init` pour se conformer aux standards WordPress et éliminer les notices PHP.
+### Fixed
+- **Parcel Synchronization:** The parcel list displayed on the dashboard is now directly linked to existing WooCommerce orders. Parcels whose orders have been deleted no longer appear.
+- **Translation Loading:** The textdomain is now loaded on the `init` hook to comply with WordPress standards and eliminate PHP notices.
 
-### Modifié
-- **Logique de l'API :** La classe API a été mise à jour pour gérer le déchiffrement des tokens et inclure une nouvelle méthode pour récupérer les détails d'un colis spécifique.
-- **Logique d'Administration :** La classe Admin gère maintenant la sauvegarde des tokens chiffrés, la nouvelle source de données pour la liste des colis, et l'endpoint AJAX pour la modale de détails.
+### Changed
+- **API Logic:** The API class has been updated to handle token decryption and includes a new method to retrieve details for a specific parcel.
+- **Admin Logic:** The Admin class now handles the saving of encrypted tokens, the new data source for the parcel list, and the AJAX endpoint for the details modal.
 
 ## [1.0.16] - 2025-07-19
 
-### Corrigé
-- **Bug Critique du Système de Mise à Jour :** Résolution d'une erreur fatale (`Trying to access array offset on null`) qui empêchait le chargement de la liste des plugins et des notifications de mise à jour. La classe `ABCD_WC_Navex_Updater` charge maintenant ses dépendances de manière sécurisée pour éviter les conditions de course.
+### Fixed
+- **Critical Update System Bug:** Resolved a fatal error (`Trying to access array offset on null`) that prevented the loading of the plugin list and update notifications. The `ABCD_WC_Navex_Updater` class now loads its dependencies securely to avoid race conditions.
 
-### Modifié
-- **Fiabilité de la Classe Updater :** Ajout de gardes de sécurité et amélioration de la logique de gestion des réponses de l'API GitHub pour rendre le processus de mise à jour plus robuste.
+### Changed
+- **Updater Class Reliability:** Added security guards and improved the logic for handling GitHub API responses to make the update process more robust.
 
 ## [1.0.15] - 2025-07-19
 
-### Ajouté
-- **Tableau de Bord de Suivi :** Ajout d'une nouvelle page d'administration "Navex Delivery" pour afficher en temps réel le statut des colis via AJAX.
-- **Gestion Avancée des Tokens :** Création d'une page de réglages dédiée (`Navex Delivery > Settings`) avec des champs séparés pour les tokens d'API d'ajout, de récupération et de suppression.
-- **Icône de Menu Personnalisée :** Intégration d'une icône SVG personnalisée pour le menu principal du plugin.
+### Added
+- **Tracking Dashboard:** Added a new "Navex Delivery" admin page to display the real-time status of parcels via AJAX.
+- **Advanced Token Management:** Created a dedicated settings page (`Navex Delivery > Settings`) with separate fields for the add, get, and delete API tokens.
+- **Custom Menu Icon:** Integrated a custom SVG icon for the main plugin menu.
 
-### Modifié
-- **Architecture Admin :** La classe `ABCD_WC_Navex_Admin` a été entièrement restructurée pour prendre en charge la nouvelle hiérarchie des menus et la Settings API de WordPress.
-- **Architecture API :** La classe `ABCD_WC_Navex_API` gère maintenant plusieurs tokens et a été préparée pour de futures méthodes (récupération, suppression).
-- **Sécurité AJAX :** Toutes les actions AJAX sont désormais sécurisées par un nonce WordPress unifié et vérifié, améliorant la protection contre les failles CSRF.
-- **Scripts Admin :** Le fichier `admin.js` a été mis à jour pour gérer la logique du nouveau tableau de bord de suivi.
+### Changed
+- **Admin Architecture:** The `ABCD_WC_Navex_Admin` class has been completely restructured to support the new menu hierarchy and the WordPress Settings API.
+- **API Architecture:** The `ABCD_WC_Navex_API` class now handles multiple tokens and has been prepared for future methods (get, delete).
+- **AJAX Security:** All AJAX actions are now secured by a unified and verified WordPress nonce, improving protection against CSRF vulnerabilities.
+- **Admin Scripts:** The `admin.js` file has been updated to handle the logic for the new tracking dashboard.

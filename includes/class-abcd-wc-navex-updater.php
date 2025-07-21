@@ -1,6 +1,6 @@
 <?php
 /**
- * Fichier pour le gestionnaire de mises à jour via GitHub.
+ * GitHub update manager file.
  *
  * @package Abcdo_Wc_Navex
  */
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Classe pour gérer les mises à jour du plugin depuis GitHub.
+ * Class to handle plugin updates from GitHub.
  */
 class ABCD_WC_Navex_Updater {
 
@@ -22,13 +22,13 @@ class ABCD_WC_Navex_Updater {
     private $github_response;
 
     /**
-     * Constructeur.
+     * Constructor.
      */
     public function __construct( $file ) {
         $this->file = $file;
         $this->github_repo = 'ABCDO-TN/abcdo-wc-navex'; // Format: user/repo
 
-        // Charger les propriétés immédiatement pour éviter les race conditions.
+        // Load properties immediately to avoid race conditions.
         $this->set_plugin_properties();
     }
 
@@ -69,7 +69,7 @@ class ABCD_WC_Navex_Updater {
             return $transient;
         }
 
-        // S'assurer que les données du plugin sont chargées.
+        // Ensure plugin data is loaded.
         if ( empty( $this->plugin ) || empty( $this->plugin['Version'] ) ) {
             return $transient;
         }
@@ -120,7 +120,7 @@ class ABCD_WC_Navex_Updater {
 
     public function upgrader_source_selection( $source, $remote_source, $upgrader, $hook_extra = null ) {
         if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === $this->basename ) {
-            // Logique de renommage de dossier plus robuste
+            // More robust folder renaming logic
             global $wp_filesystem;
             $new_source = trailingslashit( $remote_source ) . $wp_filesystem->find_folder( $remote_source );
             

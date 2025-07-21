@@ -3,16 +3,16 @@
 
     $(function() {
 
-        // Logique pour le tableau de bord des colis
+        // Logic for the parcels dashboard
         if ($('#navex-parcels-table').length) {
             loadParcels();
         }
 
-        // Gestion de la modale de détails
+        // Details modal management
         var modal = $('#navex-details-modal');
         var modalBody = $('#navex-modal-body');
 
-        // Ouvrir la modale
+        // Open modal
         $(document).on('click', '.navex-details-btn', function(e) {
             e.preventDefault();
             var trackingId = $(this).data('tracking-id');
@@ -30,18 +30,18 @@
                 if (response.success) {
                     modalBody.html(response.data.html);
                 } else {
-                    modalBody.html('<p>Erreur: ' + response.data.message + '</p>');
+                    modalBody.html('<p>Error: ' + response.data.message + '</p>');
                 }
             });
         });
 
-        // Fermer la modale
+        // Close modal
         $('#navex-modal-close, #navex-modal-backdrop').on('click', function() {
             modal.hide();
         });
 
 
-        // Logique pour le bouton d'envoi sur la page de commande
+        // Logic for the send button on the order page
         $('#abcd-wc-navex-send-btn').on('click', function() {
             var button = $(this);
             var spinner = button.next('.spinner');
@@ -62,15 +62,15 @@
 
                 if (response.success) {
                     alert(response.data.message);
-                    button.closest('div').html('<p><strong>Navex Status:</strong> Envoyé</p>');
+                    button.closest('div').html('<p><strong>Navex Status:</strong> Sent</p>');
                 } else {
-                    alert('Erreur: ' + response.data.message);
+                    alert('Error: ' + response.data.message);
                 }
             });
         });
 
         /**
-         * Charge les colis via AJAX et remplit le tableau.
+         * Load parcels via AJAX and populate the table.
          */
         function loadParcels() {
             var tableBody = $('#navex-parcels-table tbody');
@@ -96,10 +96,10 @@
                             tableBody.append(row);
                         });
                     } else {
-                        tableBody.append('<tr><td colspan="5">Aucun colis trouvé.</td></tr>');
+                        tableBody.append('<tr><td colspan="5">No parcels found.</td></tr>');
                     }
                 } else {
-                    tableBody.append('<tr><td colspan="5">Erreur lors de la récupération des colis: ' + response.data.message + '</td></tr>');
+                    tableBody.append('<tr><td colspan="5">Error loading parcels: ' + response.data.message + '</td></tr>');
                 }
             });
         }
