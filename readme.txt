@@ -3,7 +3,7 @@ Contributors: ABCDO
 Tags: woocommerce, shipping, delivery, navex, integration
 Requires at least: 5.0
 Tested up to: 6.5
-Stable tag: 1.0.21
+Stable tag: 1.0.22
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,10 @@ This plugin connects your WooCommerce store to the Tunisian delivery service Nav
 4.  Go to `Navex Delivery > Settings` and enter your Navex API keys (add, get, delete).
 
 == Changelog ==
+
+= 1.0.22 =
+*   Fix: Corrected and simplified the GitHub Actions workflow to ensure the plugin `.zip` is created correctly.
+*   Enhancement: The release process is now more robust and automatically generates release notes.
 
 = 1.0.21 =
 *   Feature: Implemented a GitHub Actions workflow to automate the creation of release packages.

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.22] - 2025-07-21
+
+### Fixed
+- **GitHub Actions Workflow:** Corrected and simplified the release workflow to ensure the plugin `.zip` archive is built correctly and that release notes are generated automatically.
+
+### Changed
+- **Release Process:** The release process is now more robust, using a dedicated action that handles artifact uploads and release note generation.
+
 ## [1.0.21] - 2025-07-21
 
 ### Added
