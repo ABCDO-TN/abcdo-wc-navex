@@ -314,15 +314,9 @@ class ABCD_WC_Navex_Admin {
         }
 
         $args = array(
-            'post_type'   => 'shop_order',
-            'post_status' => 'any',
-            'posts_per_page' => -1,
-            'meta_query'  => array(
-                array(
-                    'key'     => '_navex_tracking_id',
-                    'compare' => 'EXISTS',
-                ),
-            ),
+            'limit' => -1, // Récupérer toutes les commandes
+            'status' => 'any',
+            '_navex_tracking_id' => 'EXISTS',
         );
         $orders = wc_get_orders( $args );
 
