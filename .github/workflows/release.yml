@@ -17,40 +17,18 @@ jobs:
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-    - name: Create plugin ZIP
+    - name: Build the plugin zip
       run: |
-        PLUGIN_SLUG="abcdo-wc-navex"
-        zip -r "${PLUGIN_SLUG}.zip" . -x ".git/*" ".github/*" "README.md"
-
-    - name: Get Release Body
-      id: get_release_body
-      run: |
-        CHANGELOG_BODY=$(awk '/## \['"$VERSION"'\]/{flag=1; next} /## \[/{flag=0} flag' CHANGELOG.md)
-        CHANGELOG_BODY="${CHANGELOG_BODY//'%'/'%25'}"
-        CHANGELOG_BODY="${CHANGELOG_BODY//$'\n'/'%0A'}"
-        CHANGELOG_BODY="${CHANGELOG_BODY//$'\r'/'%0D'}"
-        echo "BODY<<EOF" >> $GITHUB_ENV
-        echo "$CHANGELOG_BODY" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-
-    - name: Create GitHub Release
+        mkdir abcdo-wc-navex
+        cp -r ./* abcdo-wc-navex/
+        rm -rf abcdo-wc-navex/.git
+        rm -rf abcdo-wc-navex/.github
+        zip -r abcdo-wc-navex.zip abcdo-wc-navex
+        
+    - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: "Release ${{ env.VERSION }}"
-        body: ${{ env.BODY }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./abcdo-wc-navex.zip
-        asset_name: abcdo-wc-navex.zip
-        asset_content_type: application/zip
+        artifacts: "abcdo-wc-navex.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        generateReleaseNotes: true
