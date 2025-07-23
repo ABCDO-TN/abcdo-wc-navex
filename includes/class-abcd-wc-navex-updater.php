@@ -69,6 +69,22 @@ class ABCD_WC_Navex_Updater {
         return $this->github_response;
     }
 
+    /**
+     * Recherche de manière robuste le lien de téléchargement du package .zip parmi les assets de la release.
+     *
+     * @return string|null L'URL de téléchargement ou null si non trouvée.
+     */
+    private function get_package_download_url() {
+        if ( ! empty( $this->github_response->assets ) ) {
+            foreach ( $this->github_response->assets as $asset ) {
+                if ( substr( $asset->name, -4 ) === '.zip' ) {
+                    return $asset->browser_download_url;
+                }
+            }
+        }
+        return null;
+    }
+
     public function modify_transient( $transient ) {
         if ( ! is_object( $transient ) || ! isset( $transient->checked ) ) {
             return $transient;
@@ -83,12 +99,14 @@ class ABCD_WC_Navex_Updater {
 
         if ( $this->github_response && ! empty( $this->github_response->tag_name ) && version_compare( $this->plugin['Version'], $this->github_response->tag_name, '<' ) ) {
             
-            if ( ! empty( $this->github_response->assets ) && ! empty( $this->github_response->assets[0]->browser_download_url ) ) {
+            $package_url = $this->get_package_download_url();
+
+            if ( $package_url ) {
                 $obj = new stdClass();
                 $obj->slug = $this->basename;
                 $obj->new_version = $this->github_response->tag_name;
                 $obj->url = $this->plugin['PluginURI'];
-                $obj->package = $this->github_response->assets[0]->browser_download_url;
+                $obj->package = $package_url;
                 
                 $transient->response[ $this->basename ] = $obj;
             }
@@ -113,11 +131,11 @@ class ABCD_WC_Navex_Updater {
                     'changelog' => ! empty( $this->github_response->body ) ? $this->github_response->body : '',
                 );
 
-                if ( ! empty( $this->github_response->assets ) && ! empty( $this->github_response->assets[0]->browser_download_url ) ) {
-                    $obj->download_link = $this->github_response->assets[0]->browser_download_url;
-                }
+                $obj->download_link = $this->get_package_download_url();
                 
-                return $obj;
+                if ( $obj->download_link ) {
+                    return $obj;
+                }
             }
         }
         return $result;
