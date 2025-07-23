@@ -1,6 +1,6 @@
 <?php
 /**
- * GitHub update manager file.
+ * Fichier pour le gestionnaire de mises à jour via GitHub.
  *
  * @package Abcdo_Wc_Navex
  */
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class to handle plugin updates from GitHub.
+ * Classe pour gérer les mises à jour du plugin depuis GitHub.
  */
 class ABCD_WC_Navex_Updater {
 
@@ -22,13 +22,13 @@ class ABCD_WC_Navex_Updater {
     private $github_response;
 
     /**
-     * Constructor.
+     * Constructeur.
      */
     public function __construct( $file ) {
         $this->file = $file;
         $this->github_repo = 'ABCDO-TN/abcdo-wc-navex'; // Format: user/repo
 
-        // Load properties immediately to avoid race conditions.
+        // Charger les propriétés immédiatement pour éviter les race conditions.
         $this->set_plugin_properties();
     }
 
@@ -45,6 +45,11 @@ class ABCD_WC_Navex_Updater {
         add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'modify_transient' ), 10, 1 );
         add_filter( 'plugins_api', array( $this, 'plugin_popup' ), 10, 3 );
         add_filter( 'upgrader_source_selection', array( $this, 'upgrader_source_selection' ), 10, 4 );
+        add_action( 'load-update-core.php', array( $this, 'clear_update_transient' ) );
+    }
+
+    public function clear_update_transient() {
+        set_site_transient( 'update_plugins', null );
     }
 
     private function get_repository_info() {
@@ -69,7 +74,7 @@ class ABCD_WC_Navex_Updater {
             return $transient;
         }
 
-        // Ensure plugin data is loaded.
+        // S'assurer que les données du plugin sont chargées.
         if ( empty( $this->plugin ) || empty( $this->plugin['Version'] ) ) {
             return $transient;
         }
@@ -120,7 +125,7 @@ class ABCD_WC_Navex_Updater {
 
     public function upgrader_source_selection( $source, $remote_source, $upgrader, $hook_extra = null ) {
         if ( isset( $hook_extra['plugin'] ) && $hook_extra['plugin'] === $this->basename ) {
-            // More robust folder renaming logic
+            // Logique de renommage de dossier plus robuste
             global $wp_filesystem;
             $new_source = trailingslashit( $remote_source ) . $wp_filesystem->find_folder( $remote_source );
             
