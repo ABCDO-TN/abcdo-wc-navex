@@ -30,7 +30,7 @@ add_action( 'before_woocommerce_init', function() {
 } );
 
 // Définir les constantes du plugin
-define( 'ABCDO_WC_NAVEX_VERSION', '1.0.17' );
+define( 'ABCDO_WC_NAVEX_VERSION', '1.0.25' );
 define( 'ABCDO_WC_NAVEX_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_URL', plugin_dir_url( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_BASENAME', plugin_basename( __FILE__ ) );
