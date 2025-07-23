@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Classe pour communiquer avec l'API Navex.
  */
-class ABCD_WC_Navex_API {
+class Abcdo_Wc_Navex_Api {
 
     /**
      * L'URL de base de l'API Navex.
@@ -45,9 +45,9 @@ class ABCD_WC_Navex_API {
      */
     public function __construct() {
         // Les tokens sont chiffrés dans la DB, on les déchiffre ici.
-        $this->token_add    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_add' ) );
-        $this->token_get    = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_get' ) );
-        $this->token_delete = ABCD_WC_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_delete' ) );
+        $this->token_add    = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_add' ) );
+        $this->token_get    = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_get' ) );
+        $this->token_delete = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_delete' ) );
     }
 
     /**
@@ -58,7 +58,7 @@ class ABCD_WC_Navex_API {
      */
     public function send_parcel( $data ) {
         if ( empty( $this->token_add ) ) {
-            return new WP_Error( 'api_token_missing', __( 'Le token d\'ajout Navex n\'est pas configuré.', 'abcdo-wc-navex' ) );
+            return new WP_Error( 'api_token_missing', __( 'The Navex Add Token is not configured.', 'abcdo-wc-navex' ) );
         }
 
         $endpoint = self::$api_url . $this->token_add . '/v1/post.php';
@@ -74,7 +74,7 @@ class ABCD_WC_Navex_API {
      */
     public function get_parcel_details( $tracking_id ) {
         if ( empty( $this->token_get ) ) {
-            return new WP_Error( 'api_token_missing', __( 'Le token de récupération Navex n\'est pas configuré.', 'abcdo-wc-navex' ) );
+            return new WP_Error( 'api_token_missing', __( 'The Navex Get Token is not configured.', 'abcdo-wc-navex' ) );
         }
 
         // L'endpoint exact doit être confirmé, c'est une supposition.
