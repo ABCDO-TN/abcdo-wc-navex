@@ -11,6 +11,8 @@
  * Text Domain:       abcdo-wc-navex
  * Domain Path:       /languages
  *
+ * @package           Abcdo_Wc_Navex
+ *
  * WC requires at least: 3.0
  * WC tested up to: 8.4
  */
@@ -39,27 +41,27 @@ define( 'ABCDO_WC_NAVEX_BASENAME', plugin_basename( __FILE__ ) );
 /**
  * La fonction principale qui s'exécute au chargement du plugin.
  */
-function abcd_wc_navex_init() {
+function abcdo_wc_navex_init() {
     // Charger les fichiers nécessaires
-    include_once( ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-crypto.php' );
-    include_once( ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-api.php' );
-    include_once( ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-admin.php' );
-    include_once( ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-updater.php' );
+    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-crypto.php';
+    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-api.php';
+    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-admin.php';
+    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-updater.php';
 
     // Instancier les classes
-    new ABCD_WC_Navex_Admin();
-    
+    new Abcdo_Wc_Navex_Admin();
+
     if ( is_admin() ) {
         $updater = new ABCD_WC_Navex_Updater( __FILE__ );
         $updater->init();
     }
 }
-add_action( 'plugins_loaded', 'abcd_wc_navex_init' );
+add_action( 'plugins_loaded', 'abcdo_wc_navex_init' );
 
 /**
  * Charge les traductions du plugin.
  */
-function abcd_wc_navex_load_textdomain() {
+function abcdo_wc_navex_load_textdomain() {
     load_plugin_textdomain( 'abcdo-wc-navex', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
-add_action( 'init', 'abcd_wc_navex_load_textdomain' );
+add_action( 'plugins_loaded', 'abcdo_wc_navex_load_textdomain' );
