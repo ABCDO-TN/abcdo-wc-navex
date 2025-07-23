@@ -2,8 +2,8 @@ name: Create Plugin ZIP on Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main # Or master, depending on your main branch name
 
 jobs:
   build:
@@ -13,22 +13,32 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Get version from tag
+    - name: Extract plugin version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      run: |
+        PLUGIN_VERSION=$(grep -oP "Version:\s*\K\d+\.\d+\.\d+" abcdo-wc-navex.php | head -1)
+        echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
 
     - name: Build the plugin zip
       run: |
-        mkdir abcdo-wc-navex
-        cp -r ./* abcdo-wc-navex/
-        rm -rf abcdo-wc-navex/.git
-        rm -rf abcdo-wc-navex/.github
-        zip -r abcdo-wc-navex.zip abcdo-wc-navex
+        PLUGIN_SLUG="abcdo-wc-navex"
+        mkdir "$PLUGIN_SLUG"
+        cp -r abcdo-wc-navex.php "$PLUGIN_SLUG/"
+        cp -r assets/ "$PLUGIN_SLUG/assets/"
+        cp -r includes/ "$PLUGIN_SLUG/includes/"
+        cp CHANGELOG.md "$PLUGIN_SLUG/"
+        cp README.md "$PLUGIN_SLUG/"
+        cp LICENSE "$PLUGIN_SLUG/"
+        cp readme.txt "$PLUGIN_SLUG/"
         
-    - name: Create Release
-      id: create_release
+        zip -r "${PLUGIN_SLUG}.zip" "$PLUGIN_SLUG"
+        
+    - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
+        tag: ${{ steps.get_version.outputs.version }}
+        name: Release ${{ steps.get_version.outputs.version }}
+        body: "Automated release for version ${{ steps.get_version.outputs.version }}"
         artifacts: "abcdo-wc-navex.zip"
         token: ${{ secrets.GITHUB_TOKEN }}
-        generateReleaseNotes: true
+        allowUpdates: true
