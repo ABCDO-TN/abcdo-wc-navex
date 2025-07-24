@@ -45,6 +45,7 @@ class Abcdo_Wc_Navex_Admin {
         add_action( 'wp_ajax_abcdo_wc_navex_send_parcel', array( $this, 'ajax_send_parcel' ) );
         add_action( 'wp_ajax_abcdo_wc_navex_get_parcels', array( $this, 'ajax_get_parcels' ) );
         add_action( 'wp_ajax_abcdo_wc_navex_get_parcel_details', array( $this, 'ajax_get_parcel_details' ) );
+        add_action( 'wp_ajax_abcdo_wc_navex_delete_parcel', array( $this, 'ajax_delete_parcel' ) );
     }
 
     /**
@@ -284,8 +285,17 @@ class Abcdo_Wc_Navex_Admin {
             wp_send_json_error( array( 'message' => __( 'Order not found.', 'abcdo-wc-navex' ) ) );
         }
 
-        // TODO: Populate this array with the actual order data required by the Navex API.
-        $data     = array();
+        // FIX: Populate the data array with actual order data for the Navex API.
+        $data = array(
+            'name'      => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+            'adresse'   => $order->get_shipping_address_1(),
+            'ville'     => $order->get_shipping_city(),
+            'telephone' => $order->get_billing_phone(),
+            'colis'     => 1, // Assuming 1 parcel per order for now
+            'valeur'    => $order->get_total(),
+            'id'        => $order->get_id(),
+        );
+
         $api      = new Abcdo_Wc_Navex_Api();
         $response = $api->send_parcel( $data );
 
@@ -338,9 +348,10 @@ class Abcdo_Wc_Navex_Admin {
                 'status'      => $order->get_meta( '_navex_shipping_status' ),
                 'date'        => $order->get_date_created()->format( 'Y-m-d' ),
                 'actions'     => sprintf(
-                    '<a href="#" class="button navex-details-btn" data-tracking-id="%s">%s</a>',
+                    '<a href="#" class="button navex-details-btn" data-tracking-id="%1$s">%2$s</a> <a href="#" class="button button-link-delete navex-delete-btn" data-tracking-id="%1$s">%3$s</a>',
                     esc_attr( $order->get_meta( '_navex_tracking_id' ) ),
-                    esc_html__( 'Details', 'abcdo-wc-navex' )
+                    esc_html__( 'Details', 'abcdo-wc-navex' ),
+                    esc_html__( 'Delete', 'abcdo-wc-navex' )
                 ),
             );
         }
@@ -376,5 +387,51 @@ class Abcdo_Wc_Navex_Admin {
         $html .= '</ul>';
 
         wp_send_json_success( array( 'html' => $html ) );
+    }
+
+    /**
+     * Gérer la requête AJAX pour supprimer un colis.
+     */
+    public function ajax_delete_parcel() {
+        check_ajax_referer( 'abcdo_wc_navex_ajax_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'abcdo-wc-navex' ) ) );
+        }
+        if ( ! isset( $_POST['tracking_id'] ) ) {
+            wp_send_json_error( array( 'message' => __( 'Missing tracking ID.', 'abcdo-wc-navex' ) ) );
+        }
+
+        $tracking_id = sanitize_text_field( $_POST['tracking_id'] );
+        $api         = new Abcdo_Wc_Navex_Api();
+        $response    = $api->delete_parcel( $tracking_id );
+
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( array( 'message' => $response->get_error_message() ) );
+        }
+
+        // Supprimer les métadonnées de la commande
+        $args = array(
+            'post_type'   => 'shop_order',
+            'post_status' => 'any',
+            'posts_per_page' => 1,
+            'meta_query'  => array(
+                array(
+                    'key'     => '_navex_tracking_id',
+                    'value'   => $tracking_id,
+                    'compare' => '=',
+                ),
+            ),
+        );
+        $orders = wc_get_orders( $args );
+
+        if ( ! empty( $orders ) ) {
+            $order = $orders[0];
+            $order->delete_meta_data( '_navex_shipping_status' );
+            $order->delete_meta_data( '_navex_tracking_id' );
+            $order->add_order_note( sprintf( __( 'Navex parcel %s has been deleted.', 'abcdo-wc-navex' ), $tracking_id ) );
+            $order->save();
+        }
+
+        wp_send_json_success( array( 'message' => __( 'Parcel deleted successfully.', 'abcdo-wc-navex' ) ) );
     }
 }
