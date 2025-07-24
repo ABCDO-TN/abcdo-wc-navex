@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Classe pour gérer le chiffrement et le déchiffrement des données.
  */
-class ABCD_WC_Navex_Crypto {
+class Abcdo_Wc_Navex_Crypto {
 
     /**
      * L'algorithme de chiffrement.

@@ -40,6 +40,34 @@
             modal.hide();
         });
 
+        // Gérer la suppression de colis
+        $(document).on('click', '.navex-delete-btn', function(e) {
+            e.preventDefault();
+
+            if ( ! confirm( 'Êtes-vous sûr de vouloir supprimer ce colis ?' ) ) {
+                return;
+            }
+
+            var trackingId = $(this).data('tracking-id');
+            var row = $(this).closest('tr');
+
+            var data = {
+                action: 'abcd_wc_navex_delete_parcel',
+                nonce: abcd_wc_navex_ajax.nonce,
+                tracking_id: trackingId
+            };
+
+            $.post(abcd_wc_navex_ajax.ajax_url, data, function(response) {
+                if (response.success) {
+                    row.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                } else {
+                    alert('Erreur: ' + response.data.message);
+                }
+            });
+        });
+
 
         // Logique pour le bouton d'envoi sur la page de commande
         $('#abcd-wc-navex-send-btn').on('click', function() {

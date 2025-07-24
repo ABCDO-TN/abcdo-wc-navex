@@ -1,70 +1,44 @@
-name: Release New Version
+name: Create Plugin ZIP on Release
 
 on:
   push:
     branches:
-      - main
+      - main # Or master, depending on your main branch name
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Get Plugin Version
-        id: get_version
-        run: |
-          VERSION=$(grep -oP 'Version:\s*\K[0-9.]+' abcdo-wc-navex.php)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+    - name: Extract plugin version
+      id: get_version
+      run: |
+        PLUGIN_VERSION=$(grep -oP "Version:\s*\K\d+\.\d+\.\d+" abcdo-wc-navex.php | head -1)
+        echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if Release already exists
-        id: check_release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            const releaseExists = releases.data.some(r => r.tag_name === `v${process.env.PLUGIN_VERSION}`);
-            return releaseExists;
-        env:
-          PLUGIN_VERSION: ${{ steps.get_version.outputs.version }}
-
-      - name: Proceed if Release does not exist
-        if: steps.check_release.outputs.result == 'false'
-        run: echo "Release for v${{ steps.get_version.outputs.version }} does not exist. Proceeding..."
-
-      - name: Get Changelog
-        if: steps.check_release.outputs.result == 'false'
-        id: get_changelog
-        run: |
-          CHANGELOG=$(awk '/= ${{ steps.get_version.outputs.version }} =/{flag=1; next} /= [0-9]/{flag=0} flag' readme.txt)
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          echo "changelog=${CHANGELOG}" >> $GITHUB_OUTPUT
-
-      - name: Create Release Directory
-        if: steps.check_release.outputs.result == 'false'
-        run: |
-          mkdir -p abcdo-wc-navex
-          rsync -av --progress . ./abcdo-wc-navex --exclude ".git" --exclude ".github" --exclude "abcdo-wc-navex"
-
-      - name: Create Zip Archive
-        if: steps.check_release.outputs.result == 'false'
-        run: zip -r abcdo-wc-navex.zip ./abcdo-wc-navex
-
-      - name: Create Release and Upload Asset
-        if: steps.check_release.outputs.result == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name:  Version ${{ steps.get_version.outputs.version }}
-          body: ${{ steps.get_changelog.outputs.changelog }}
-          files: abcdo-wc-navex.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build the plugin zip
+      run: |
+        PLUGIN_SLUG="abcdo-wc-navex"
+        mkdir "$PLUGIN_SLUG"
+        cp -r abcdo-wc-navex.php "$PLUGIN_SLUG/"
+        cp -r assets/ "$PLUGIN_SLUG/assets/"
+        cp -r includes/ "$PLUGIN_SLUG/includes/"
+        cp CHANGELOG.md "$PLUGIN_SLUG/"
+        cp README.md "$PLUGIN_SLUG/"
+        cp LICENSE "$PLUGIN_SLUG/"
+        cp readme.txt "$PLUGIN_SLUG/"
+        
+        zip -r "${PLUGIN_SLUG}.zip" "$PLUGIN_SLUG"
+        
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.get_version.outputs.version }}
+        name: Release ${{ steps.get_version.outputs.version }}
+        body: "Automated release for version ${{ steps.get_version.outputs.version }}"
+        artifacts: "abcdo-wc-navex.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        allowUpdates: true
