@@ -1,0 +1,28 @@
+# Git and GitHub files
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Node.js/NPM dependencies
+node_modules/
+package.json
+package-lock.json
+
+# Composer dependencies
+vendor/
+composer.json
+composer.lock
+
+# Build tools and source files
+src/
+assets/scss/
+webpack.config.js
+CHANGELOG.md
+CONTRIBUTING.md
+!README.md
+
+# Other dev files
+.editorconfig
+phpcs.xml
+.distignore

@@ -1,13 +1,15 @@
-name: Create Plugin ZIP on Release
+name: Build and Release Plugin ZIP
 
 on:
-  push:
-    branches:
-      - main # Or master, depending on your main branch name
+  release:
+    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -16,29 +18,28 @@ jobs:
     - name: Extract plugin version
       id: get_version
       run: |
-        PLUGIN_VERSION=$(grep -oP "Version:\s*\K\d+\.\d+\.\d+" abcdo-wc-navex.php | head -1)
+        PLUGIN_VERSION=$(grep -oP "Version:\s*\K[0-9.]+" abcdo-wc-navex.php)
         echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
 
     - name: Build the plugin zip
+      id: build_zip
       run: |
         PLUGIN_SLUG="abcdo-wc-navex"
-        mkdir "$PLUGIN_SLUG"
-        cp -r abcdo-wc-navex.php "$PLUGIN_SLUG/"
-        cp -r assets/ "$PLUGIN_SLUG/assets/"
-        cp -r includes/ "$PLUGIN_SLUG/includes/"
-        cp CHANGELOG.md "$PLUGIN_SLUG/"
-        cp README.md "$PLUGIN_SLUG/"
-        cp LICENSE "$PLUGIN_SLUG/"
-        cp readme.txt "$PLUGIN_SLUG/"
+        VERSION=${{ steps.get_version.outputs.version }}
+        ZIP_FILE="${PLUGIN_SLUG}.zip" # Simplified name for consistency
         
-        zip -r "${PLUGIN_SLUG}.zip" "$PLUGIN_SLUG"
+        # Create a ZIP archive from the current commit, respecting .distignore
+        git archive -o "${ZIP_FILE}" --prefix="${PLUGIN_SLUG}/" HEAD
         
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1
+        echo "zip_path=${ZIP_FILE}" >> $GITHUB_OUTPUT
+        echo "zip_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag: ${{ steps.get_version.outputs.version }}
-        name: Release ${{ steps.get_version.outputs.version }}
-        body: "Automated release for version ${{ steps.get_version.outputs.version }}"
-        artifacts: "abcdo-wc-navex.zip"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        allowUpdates: true
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./${{ steps.build_zip.outputs.zip_path }}
+        asset_name: ${{ steps.build_zip.outputs.zip_name }}
+        asset_content_type: application/zip

@@ -5,6 +5,18 @@ Toutes les modifications notables apportées à ce projet seront documentées da
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.26] - 2025-07-24
+
+### Corrigé
+- **Workflow GitHub Actions :** Mise à jour du workflow pour construire et publier correctement l'archive ZIP du plugin lors d'une nouvelle release.
+- **Endpoint de l'API Navex :** Correction de l'endpoint utilisé pour récupérer les détails d'un colis.
+
+### Ajouté
+- **Suppression de Colis :** Implémentation d'une fonctionnalité permettant de supprimer un colis directement depuis le tableau de bord d'administration.
+
+### Modifié
+- **Données d'Envoi :** Le tableau de données envoyé à l'API Navex est maintenant correctement rempli avec les informations de la commande.
+
 ## [1.0.17] - 2025-07-19
 
 ### Ajouté
