@@ -1,44 +1,41 @@
-name: Create Plugin ZIP on Release
+name: Build, Tag & Release
 
 on:
   push:
     branches:
-      - main # Or master, depending on your main branch name
+      - '**'
+    branches-ignore:
+      - 'main'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Extract plugin version
-      id: get_version
-      run: |
-        PLUGIN_VERSION=$(grep -oP "Version:\s*\K\d+\.\d+\.\d+" abcdo-wc-navex.php | head -1)
-        echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
-
-    - name: Build the plugin zip
-      run: |
-        PLUGIN_SLUG="abcdo-wc-navex"
-        mkdir "$PLUGIN_SLUG"
-        cp -r abcdo-wc-navex.php "$PLUGIN_SLUG/"
-        cp -r assets/ "$PLUGIN_SLUG/assets/"
-        cp -r includes/ "$PLUGIN_SLUG/includes/"
-        cp CHANGELOG.md "$PLUGIN_SLUG/"
-        cp README.md "$PLUGIN_SLUG/"
-        cp LICENSE "$PLUGIN_SLUG/"
-        cp readme.txt "$PLUGIN_SLUG/"
+      - name: Get Plugin Version
+        id: get_version
+        run: |
+          PLUGIN_VERSION=$(grep -oP "Version:\s*\K[0-9.]+" abcdo-wc-navex.php)
+          echo "version=${PLUGIN_VERSION}" >> $GITHUB_OUTPUT
         
-        zip -r "${PLUGIN_SLUG}.zip" "$PLUGIN_SLUG"
-        
-    - name: Create GitHub Release
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ steps.get_version.outputs.version }}
-        name: Release ${{ steps.get_version.outputs.version }}
-        body: "Automated release for version ${{ steps.get_version.outputs.version }}"
-        artifacts: "abcdo-wc-navex.zip"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        allowUpdates: true
+      - name: WordPress Plugin Deploy
+        id: deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          generate-zip: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.get_version.outputs.version }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: "Automated release for version ${{ steps.get_version.outputs.version }}"
+          artifacts: "${{ steps.deploy.outputs.zip-path }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          prerelease: false
