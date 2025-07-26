@@ -16,5 +16,5 @@
 ### Fixed
 - The parcel list is now synchronized with WooCommerce orders; parcels linked to deleted orders no longer appear.
 - Translation files are now loaded on the correct hook to avoid PHP notices.
-
+²
 ... (previous versions)
