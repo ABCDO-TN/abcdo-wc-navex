@@ -38,6 +38,8 @@ jobs:
   release:
     needs: build # Ce job dépend du succès du job 'build'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Download ZIP artifact
