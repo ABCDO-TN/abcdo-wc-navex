@@ -3,7 +3,7 @@
  * Plugin Name:       ABCDO Navex Integration for WooCommerce
  * Plugin URI:        https://github.com/ABCDO-TN/abcdo-wc-navex
  * Description:       Intègre l'API de livraison Navex avec WooCommerce pour automatiser la création de colis et la synchronisation des statuts.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Author:            ABCDO
  * Author URI:        https://abcdo.tn
  * License:           GPL-2.0+
@@ -32,7 +32,11 @@ add_action( 'before_woocommerce_init', function() {
 } );
 
 // Définir les constantes du plugin
-define( 'ABCDO_WC_NAVEX_VERSION', '1.1.1' );
+if ( ! function_exists( 'get_plugin_data' ) ) {
+    require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+$plugin_data = get_plugin_data( __FILE__ );
+define( 'ABCDO_WC_NAVEX_VERSION', $plugin_data['Version'] );
 define( 'ABCDO_WC_NAVEX_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_URL', plugin_dir_url( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_BASENAME', plugin_basename( __FILE__ ) );
