@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       ABCDO Navex Integration for WooCommerce
  * Plugin URI:        https://github.com/ABCDO-TN/abcdo-wc-navex
- * Description:       Intègre l'API de livraison Navex avec WooCommerce pour automatiser la création de colis.
- * Version:           1.1.0
+ * Description:       Intègre l'API de livraison Navex avec WooCommerce pour automatiser la création de colis et la synchronisation des statuts.
+ * Version:           1.1.1
  * Author:            ABCDO
  * Author URI:        https://abcdo.tn
  * License:           GPL-2.0+
@@ -32,20 +32,27 @@ add_action( 'before_woocommerce_init', function() {
 } );
 
 // Définir les constantes du plugin
-
-define( 'ABCDO_WC_NAVEX_VERSION', '1.1.0' );
+define( 'ABCDO_WC_NAVEX_VERSION', '1.1.1' );
 define( 'ABCDO_WC_NAVEX_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_URL', plugin_dir_url( __FILE__ ) );
 define( 'ABCDO_WC_NAVEX_BASENAME', plugin_basename( __FILE__ ) );
-
 
 /**
  * Hook d'activation du plugin.
  */
 register_activation_hook( __FILE__, 'abcdo_wc_navex_activate' );
 function abcdo_wc_navex_activate() {
-    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-database-manager.php';
-    Abcdo_Wc_Navex_Database_Manager::create_table();
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-cron-manager.php';
+    Abcdo_Wc_Navex_Cron_Manager::schedule_event();
+}
+
+/**
+ * Hook de désactivation du plugin.
+ */
+register_deactivation_hook( __FILE__, 'abcdo_wc_navex_deactivate' );
+function abcdo_wc_navex_deactivate() {
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-cron-manager.php';
+    Abcdo_Wc_Navex_Cron_Manager::unschedule_event();
 }
 
 /**
@@ -53,24 +60,30 @@ function abcdo_wc_navex_activate() {
  */
 function abcdo_wc_navex_init() {
     // Charger les fichiers nécessaires
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-crypto.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-database-manager.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-token-manager.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-settings.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-migration.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-api.php';
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-admin.php'; // To be refactored
-    include_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-updater.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-encryption-service.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-logger.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-api-client.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-cron-manager.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-order-sync.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-migration.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'admin/class-admin-assets.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'admin/class-admin-settings.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'admin/class-admin.php';
+    require_once ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-updater.php';
+
+    // Lancer la migration si nécessaire
+    Abcdo_Wc_Navex_Migration::run();
 
     // Instancier les classes
-    new Abcdo_Wc_Navex_Admin(); // To be refactored
+    new Abcdo_Wc_Navex_Admin();
+    new Abcdo_Wc_Navex_Cron_Manager();
 
     if ( is_admin() ) {
-        $settings = new Abcdo_Wc_Navex_Settings();
+        $settings = new Abcdo_Wc_Navex_Admin_Settings();
         $settings->init();
 
-        $migration = new Abcdo_Wc_Navex_Migration();
-        $migration->init();
+        $assets = new Abcdo_Wc_Navex_Admin_Assets();
+        $assets->init();
         
         $updater = new ABCD_WC_Navex_Updater( __FILE__ );
         $updater->init();
