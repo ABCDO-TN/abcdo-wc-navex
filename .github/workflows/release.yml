@@ -3,10 +3,13 @@ name: Build, Tag & Release
 on:
   push:
     branches:
-      - '**'
+      - '**' # Déclenchement sur toutes les branches
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }} # Rendre la version disponible pour d'autres jobs
 
     steps:
       - name: Checkout code
@@ -17,22 +20,38 @@ jobs:
         run: |
           PLUGIN_VERSION=$(grep -oP "Version:\s*\K[0-9.]+" abcdo-wc-navex.php)
           echo "version=${PLUGIN_VERSION}" >> $GITHUB_OUTPUT
-        
-      - name: WordPress Plugin Deploy
-        id: deploy
-        uses: 10up/action-wordpress-plugin-deploy@stable
+
+      - name: Build Plugin ZIP
+        id: build_zip
+        run: |
+          PLUGIN_SLUG="abcdo-wc-navex"
+          ARCHIVE_NAME="${PLUGIN_SLUG}.zip"
+          zip -r $ARCHIVE_NAME . -x@.distignore
+          echo "zip-name=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload ZIP as Artifact
+        uses: actions/upload-artifact@v4
         with:
-          generate-zip: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+          name: plugin-zip
+          path: ${{ steps.build_zip.outputs.zip-name }}
+
+  release:
+    needs: build # Ce job dépend du succès du job 'build'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download ZIP artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-zip
+
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ steps.get_version.outputs.version }}
-          name: Release ${{ steps.get_version.outputs.version }}
-          body: "Automated release for version ${{ steps.get_version.outputs.version }}"
-          artifacts: "${{ steps.deploy.outputs.zip-path }}"
+          tag: ${{ needs.build.outputs.version }}
+          name: Release ${{ needs.build.outputs.version }}
+          body: "Automated release for version ${{ needs.build.outputs.version }}"
+          artifacts: "abcdo-wc-navex.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
-          prerelease: false
+          prerelease: true
