@@ -3,7 +3,7 @@ Contributors: ABCDO
 Tags: woocommerce, shipping, delivery, navex, integration
 Requires at least: 5.0
 Tested up to: 6.5
-Stable tag: 1.0.17
+Stable tag: 1.1.0
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,14 @@ Ce plugin connecte votre boutique WooCommerce au service de livraison tunisien N
 4.  Allez dans `Navex Delivery > Settings` et entrez vos clés d'API Navex (ajout, récupération, suppression).
 
 == Changelog ==
+
+= 1.1.0 =
+*   Sécurité : Refonte complète de la gestion des clés API. Les clés sont maintenant stockées chiffrées dans une table de base de données dédiée (`wp_abcdo_wc_navex_tokens`) au lieu de `wp_options`.
+*   Sécurité : L'interface de configuration a été sécurisée. La clé API n'est jamais affichée dans le formulaire, empêchant son exposition dans le code source HTML.
+*   Fonctionnalité : Simplification de la configuration avec un champ de clé API unique au lieu de trois.
+*   Fonctionnalité : Ajout d'un bouton pour supprimer facilement la clé API enregistrée.
+*   Amélioration : Ajout d'une routine de migration pour nettoyer les anciennes clés API de la table `wp_options` lors de la mise à jour.
+*   Amélioration : La structure du code a été refactorisée en classes distinctes (Database_Manager, Token_Manager, Settings, Migration) pour une meilleure maintenabilité et séparation des préoccupations.
 
 = 1.0.17 =
 *   Fonctionnalité : Le bouton "Détails" est maintenant fonctionnel et ouvre une fenêtre modale avec les informations du colis.

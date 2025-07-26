@@ -22,32 +22,17 @@ class Abcdo_Wc_Navex_Api {
     private static $api_url = 'https://app.navex.tn/api/';
 
     /**
-     * Le token d'API pour l'ajout.
+     * The single API token.
      * @var string
      */
-    private $token_add;
-
-    /**
-     * Le token d'API pour la récupération.
-     * @var string
-     */
-    private $token_get;
-
-    /**
-     * Le token d'API pour la suppression.
-     * @var string
-     */
-    private $token_delete;
-
+    private $api_token;
 
     /**
      * Constructeur.
      */
     public function __construct() {
-        // Les tokens sont chiffrés dans la DB, on les déchiffre ici.
-        $this->token_add    = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_add' ) );
-        $this->token_get    = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_get' ) );
-        $this->token_delete = Abcdo_Wc_Navex_Crypto::decrypt( get_option( 'abcdo_wc_navex_api_token_delete' ) );
+        $token_manager = new Abcdo_Wc_Navex_Token_Manager();
+        $this->api_token = $token_manager->get_decrypted_token();
     }
 
     /**
@@ -57,11 +42,11 @@ class Abcdo_Wc_Navex_Api {
      * @return array|WP_Error La réponse de l'API ou une erreur.
      */
     public function send_parcel( $data ) {
-        if ( empty( $this->token_add ) ) {
-            return new WP_Error( 'api_token_missing', __( 'The Navex Add Token is not configured.', 'abcdo-wc-navex' ) );
+        if ( empty( $this->api_token ) ) {
+            return new WP_Error( 'api_token_missing', __( 'The Navex API Key is not configured.', 'abcdo-wc-navex' ) );
         }
 
-        $endpoint = self::$api_url . $this->token_add . '/v1/post.php';
+        $endpoint = self::$api_url . $this->api_token . '/v1/post.php';
 
         return $this->make_request( $endpoint, $data );
     }
@@ -73,12 +58,12 @@ class Abcdo_Wc_Navex_Api {
      * @return array|WP_Error La réponse de l'API ou une erreur.
      */
     public function get_parcel_details( $tracking_id ) {
-        if ( empty( $this->token_get ) ) {
-            return new WP_Error( 'api_token_missing', __( 'The Navex Get Token is not configured.', 'abcdo-wc-navex' ) );
+        if ( empty( $this->api_token ) ) {
+            return new WP_Error( 'api_token_missing', __( 'The Navex API Key is not configured.', 'abcdo-wc-navex' ) );
         }
 
         // FIX: The correct endpoint for getting parcel details uses the tracking ID in the path.
-        $endpoint = self::$api_url . $this->token_get . '/v1/get/' . urlencode( $tracking_id );
+        $endpoint = self::$api_url . $this->api_token . '/v1/get/' . urlencode( $tracking_id );
 
         return $this->make_request( $endpoint, array(), 'GET' );
     }
@@ -90,11 +75,11 @@ class Abcdo_Wc_Navex_Api {
      * @return array|WP_Error La réponse de l'API ou une erreur.
      */
     public function delete_parcel( $tracking_id ) {
-        if ( empty( $this->token_delete ) ) {
-            return new WP_Error( 'api_token_missing', __( 'The Navex Delete Token is not configured.', 'abcdo-wc-navex' ) );
+        if ( empty( $this->api_token ) ) {
+            return new WP_Error( 'api_token_missing', __( 'The Navex API Key is not configured.', 'abcdo-wc-navex' ) );
         }
 
-        $endpoint = self::$api_url . $this->token_delete . '/v1/delete/' . urlencode( $tracking_id );
+        $endpoint = self::$api_url . $this->api_token . '/v1/delete/' . urlencode( $tracking_id );
 
         return $this->make_request( $endpoint, array(), 'DELETE' );
     }

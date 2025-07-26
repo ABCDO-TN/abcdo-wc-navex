@@ -25,9 +25,6 @@ class Abcdo_Wc_Navex_Admin {
      * Constructeur.
      */
     public function __construct() {
-        // Inclure la classe de chiffrement
-        include_once( ABCDO_WC_NAVEX_PATH . 'includes/class-abcd-wc-navex-crypto.php' );
-
         // Définir l'icône du menu
         $this->menu_icon = 'data:image/svg+xml;base64,' . base64_encode(
             '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 6L12 10L20 6L12 2Z" fill="white"/><path d="M4 18L12 22L20 18" fill="white"/><path d="M4 12L12 16L20 12" fill="white"/></svg>'
@@ -35,7 +32,6 @@ class Abcdo_Wc_Navex_Admin {
 
         // Hooks principaux
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-        add_action( 'admin_init', array( $this, 'register_settings' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
         // Meta box sur la page de commande
@@ -62,92 +58,7 @@ class Abcdo_Wc_Navex_Admin {
             56
         );
 
-        add_submenu_page(
-            'abcdo-wc-navex',
-            __( 'Settings', 'abcdo-wc-navex' ),
-            __( 'Settings', 'abcdo-wc-navex' ),
-            'manage_options',
-            'abcdo-wc-navex-settings',
-            array( $this, 'render_settings_page' )
-        );
-    }
-
-    /**
-     * Enregistrer les réglages avec la Settings API.
-     */
-    public function register_settings() {
-        add_settings_section(
-            'abcdo_wc_navex_api_section',
-            __( 'API Credentials', 'abcdo-wc-navex' ),
-            null,
-            'abcdo-wc-navex-settings'
-        );
-
-        $fields = array(
-            'api_token_add'    => __( 'Token d\'ajout', 'abcdo-wc-navex' ),
-            'api_token_get'    => __( 'Token de récupération', 'abcdo-wc-navex' ),
-            'api_token_delete' => __( 'Token de suppression', 'abcdo-wc-navex' ),
-        );
-
-        foreach ( $fields as $id => $title ) {
-            $option_name = 'abcdo_wc_navex_' . $id;
-            register_setting( 'abcdo_wc_navex_options', $option_name, array( 'sanitize_callback' => array( $this, 'encrypt_setting' ) ) );
-            add_settings_field(
-                $option_name,
-                $title,
-                array( $this, 'render_text_field' ),
-                'abcdo-wc-navex-settings',
-                'abcdo_wc_navex_api_section',
-                array(
-                    'label_for' => $option_name,
-                    'name'      => $option_name,
-                )
-            );
-        }
-    }
-
-    /**
-     * Chiffrer la valeur d'un réglage avant de la sauvegarder.
-     */
-    public function encrypt_setting( $value ) {
-        if ( empty( $value ) ) {
-            return '';
-        }
-        return Abcdo_Wc_Navex_Crypto::encrypt( $value );
-    }
-
-    /**
-     * Afficher un champ de texte standard pour la Settings API (en déchiffrant la valeur).
-     */
-    public function render_text_field( $args ) {
-        $option_value = get_option( $args['name'] );
-        $decrypted_value = '';
-        if ( ! empty( $option_value ) ) {
-            $decrypted_value = Abcdo_Wc_Navex_Crypto::decrypt( $option_value );
-        }
-        printf(
-            '<input type="text" id="%1$s" name="%1$s" value="%2$s" class="regular-text" />',
-            esc_attr( $args['name'] ),
-            esc_attr( $decrypted_value )
-        );
-    }
-
-    /**
-     * Afficher la page de réglages.
-     */
-    public function render_settings_page() {
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-            <form action="options.php" method="post">
-                <?php
-                settings_fields( 'abcdo_wc_navex_options' );
-                do_settings_sections( 'abcdo-wc-navex-settings' );
-                submit_button( __( 'Save Settings', 'abcdo-wc-navex' ) );
-                ?>
-            </form>
-        </div>
-        <?php
+        // The settings page is now handled by Abcdo_Wc_Navex_Settings
     }
 
     /**
