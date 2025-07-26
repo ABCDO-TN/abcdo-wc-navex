@@ -64,6 +64,14 @@ class Abcdo_Wc_Navex_Admin {
             $this->menu_icon,
             56
         );
+
+        add_submenu_page(
+            'abcdo-wc-navex',
+            __( 'Settings', 'abcdo-wc-navex' ),
+            __( 'Settings', 'abcdo-wc-navex' ),
+            'manage_options',
+            'admin.php?page=wc-settings&tab=navex_integration'
+        );
     }
 
     /**
