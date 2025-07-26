@@ -1,59 +1,44 @@
-name: Release New Version
+name: Create Plugin ZIP on Release
 
 on:
   push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - '[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - main # Or master, depending on your main branch name
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          # Fetch all history for all tags and branches
-          fetch-depth: 0
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Get Tag Version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+    - name: Extract plugin version
+      id: get_version
+      run: |
+        PLUGIN_VERSION=$(grep -oP "Version:\s*\K\d+\.\d+\.\d+" abcdo-wc-navex.php | head -1)
+        echo "version=$PLUGIN_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update plugin version
-        run: |
-          VERSION_NUMBER=$(echo ${{ steps.get_version.outputs.VERSION }} | sed 's/v//')
-          sed -i "s/Version: .*/Version: $VERSION_NUMBER/" abcdo-navex-wc.php
-          sed -i "s/Stable tag: .*/Stable tag: $VERSION_NUMBER/" readme.txt
-
-      - name: Create Release Archive
-        run: |
-          PLUGIN_NAME=abcdo-navex-wc
-          VERSION_NUMBER=$(echo ${{ steps.get_version.outputs.VERSION }} | sed 's/v//')
-          ARCHIVE_NAME="${PLUGIN_NAME}-${VERSION_NUMBER}.zip"
-          git archive --format=zip --output=$ARCHIVE_NAME HEAD
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: "Release ${{ github.ref }}"
-          body: |
-            Changes in this release:
-            - Auto-generated release notes.
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./abcdo-navex-wc-${{ steps.get_version.outputs.VERSION | sed 's/v//' }}.zip
-          asset_name: abcdo-navex-wc-${{ steps.get_version.outputs.VERSION | sed 's/v//' }}.zip
-          asset_content_type: application/zip
+    - name: Build the plugin zip
+      run: |
+        PLUGIN_SLUG="abcdo-wc-navex"
+        mkdir "$PLUGIN_SLUG"
+        cp -r abcdo-wc-navex.php "$PLUGIN_SLUG/"
+        cp -r assets/ "$PLUGIN_SLUG/assets/"
+        cp -r includes/ "$PLUGIN_SLUG/includes/"
+        cp CHANGELOG.md "$PLUGIN_SLUG/"
+        cp README.md "$PLUGIN_SLUG/"
+        cp LICENSE "$PLUGIN_SLUG/"
+        cp readme.txt "$PLUGIN_SLUG/"
+        
+        zip -r "${PLUGIN_SLUG}.zip" "$PLUGIN_SLUG"
+        
+    - name: Create GitHub Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.get_version.outputs.version }}
+        name: Release ${{ steps.get_version.outputs.version }}
+        body: "Automated release for version ${{ steps.get_version.outputs.version }}"
+        artifacts: "abcdo-wc-navex.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        allowUpdates: true
